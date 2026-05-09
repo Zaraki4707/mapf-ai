@@ -19,12 +19,20 @@ const INDUSTRIAL_COLORS = [
   '#FF6B6B', // Agent 15: Pastel Red
 ];
 
-function GridVisualization({ paths, gridHeight = 6, gridWidth = 17 }) {
+function GridVisualization({ paths, gridHeight = 6, gridWidth = 17, obstacles = [] }) {
   const [timeStep, setTimeStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showTrails, setShowTrails] = useState(true);
   
-  const maxSteps = Math.max(...paths.map(p => p.length));
+  const maxSteps = paths.length > 0 ? Math.max(...paths.map(p => p.length)) : 0;
+  
+  // Memoize obstacle lookup for performance (handling both [row, col] and {x, y} formats if necessary)
+  const obstacleSet = new Set(obstacles.map(o => Array.isArray(o) ? `${o[0]}-${o[1]}` : `${o.y}-${o.x}`));
+  console.log('--- DEBUG VISUALIZATION ---');
+  console.log('Grid Dimensions:', { gridHeight, gridWidth });
+  console.log('Obstacles Received:', obstacles);
+  console.log('Obstacle Set Keys:', Array.from(obstacleSet));
+  console.log('---------------------------');
 
   useEffect(() => {
     let interval;
@@ -82,7 +90,12 @@ function GridVisualization({ paths, gridHeight = 6, gridWidth = 17 }) {
         });
 
         grid.push(
-          <div key={key} className="grid-cell">
+          <div key={key} className={`grid-cell ${obstacleSet.has(key) ? 'obstacle-cell' : ''}`}>
+            {/* Obstacle Marker */}
+            {obstacleSet.has(key) && (
+              <div className="obstacle-box" />
+            )}
+
             {/* Trail Breadcrumb */}
             {trailAgent !== null && !isFuture && agentAtPosition === null && (
               <div 

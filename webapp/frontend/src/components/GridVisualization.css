@@ -113,6 +113,25 @@ body {
   background-color: #2D3135 !important;
 }
 
+/* Obstacles - High Visibility Debugging */
+.grid-cell.obstacle-cell {
+  background-color: #ff00ff !important; /* MAGENTA for extreme visibility during debug */
+  border: 2px solid white !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 5;
+}
+
+.obstacle-box {
+  width: 20px; /* Larger box */
+  height: 20px;
+  background-color: #ff0000 !important; /* Pure Red */
+  border: 1px solid black;
+  z-index: 10 !important;
+  pointer-events: none;
+}
+
 /* Agent Nodes - Sharp Square */
 .agent-node {
   width: 24px;
