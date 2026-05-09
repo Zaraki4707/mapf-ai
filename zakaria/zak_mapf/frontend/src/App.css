@@ -1,0 +1,220 @@
+:root {
+  --bg-primary: #1A1C1E;
+  --bg-secondary: #202326;
+  --border-structural: #3D4248;
+  --text-primary: #FFFFFF;
+  --text-muted: #A0A0A0;
+  --acc-yellow: #F1C40F;
+  --acc-blue: #3498DB;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header - Command Center Style */
+.App-header {
+  background: var(--bg-secondary);
+  padding: 16px 24px;
+  border-bottom: 2px solid var(--border-structural);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.App-header h1 {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--acc-yellow);
+}
+
+.App-header p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.app-nav {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.nav-btn {
+  border: 1px solid var(--border-structural);
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  padding: 8px 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.8px;
+}
+
+.nav-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--acc-blue);
+}
+
+.nav-btn-active {
+  border-color: var(--acc-yellow);
+  color: var(--acc-yellow);
+}
+
+.App-main {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.container {
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Results Section - Industrial Panel */
+.results {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-structural);
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.results-header {
+  border-bottom: 1px solid var(--border-structural);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.results-header h2 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  margin: 0;
+  text-transform: uppercase;
+  color: var(--acc-blue);
+}
+
+.stats {
+  display: flex;
+  gap: 24px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 2px solid var(--border-structural);
+  padding-left: 12px;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: bold;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary);
+}
+
+/* Loading/Error States */
+.loading, .error-message {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-structural);
+  padding: 40px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.spinner {
+  border: 2px solid var(--border-structural);
+  border-top: 2px solid var(--acc-yellow);
+  width: 32px;
+  height: 32px;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message h3 {
+  color: #F1C40F;
+  text-transform: uppercase;
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #C0392B;
+  display: inline-block;
+}
+
+.error-details {
+  color: #E74C3C;
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 10px;
+  border: 1px dashed #C0392B;
+  background: rgba(192, 57, 43, 0.1);
+  margin-bottom: 10px;
+}
+
+/* Details Section */
+.path-details {
+  margin-top: 16px;
+  border-top: 1px solid var(--border-structural);
+  padding-top: 16px;
+}
+
+.agent-path {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-structural);
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.agent-path h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+}
+
+.path-coordinates {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+/* Generic Button Reset for Hardware Style */
+button {
+  border-radius: 0;
+  box-shadow: none;
+  font-family: 'JetBrains Mono', monospace;
+}

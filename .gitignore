@@ -55,3 +55,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.swp
+
+#zak
+node_modules/
