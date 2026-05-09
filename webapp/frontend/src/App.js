@@ -164,7 +164,6 @@ function App() {
       </main>
 
       <footer className="App-footer">
-        <p>Powered by Conflict-Based Search (CBS) and classical search benchmarks</p>
       </footer>
     </div>
   );
