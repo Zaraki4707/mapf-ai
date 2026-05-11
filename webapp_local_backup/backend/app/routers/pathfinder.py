@@ -209,6 +209,8 @@ async def find_path(request: PathfinderRequest):
 
     if result.get('paths'):
         result['paths'] = [_convert_output(p) for p in result['paths']]
+        # Pass obstacles back to frontend for visualization
+        result['obstacles'] = [[o[1], o[0]] for o in file_obstacles]
     else:
         # result failed or is empty
         error_msg = result.get('message', "No valid paths found. Ensure points are reachable and not blocked by obstacles.")
@@ -247,6 +249,19 @@ async def find_simple_path(request: PathfinderRequest):
     planner = PathPlanner(grid)
 
     result = planner.plan_simple(starts, destinations, algorithm=request.algorithm)
+    
+    if result.get('paths'):
+        result['paths'] = [_convert_output(p) for p in result['paths']]
+        # Pass obstacles back to frontend for visualization
+        result['obstacles'] = [[o[1], o[0]] for o in file_obstacles]
+    else:
+        # result failed or is empty
+        error_msg = result.get('message', "No valid paths found. Ensure points are reachable and not blocked by obstacles.")
+        return PathfinderResponse(success=False, message=f"Pathfinding failed: {error_msg}")
+
+    result['algorithm_used'] = request.algorithm
+
+    return PathfinderResponse(**result)
 
     if result.get('paths'):
         result['paths'] = [_convert_output(p) for p in result['paths']]

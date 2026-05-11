@@ -34,7 +34,22 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+@app.get("/maps")
+async def get_test_maps():
+    return [
+        {"name": "file", "path": "app/maps/file.txt", "source": "filesystem"},
+        {"name": "grid", "path": "app/maps/grid.txt", "source": "filesystem"},
+        {"name": "large", "path": "app/maps/large.txt", "source": "filesystem"},
+        {"name": "maze-128-128-2", "path": "app/maps/maze-128-128-2.txt", "source": "filesystem"},
+        {"name": "maze-32-32-2", "path": "app/maps/maze-32-32-2.txt", "source": "filesystem"},
+        {"name": "medium", "path": "app/maps/medium.txt", "source": "filesystem"},
+        {"name": "small", "path": "app/maps/small.txt", "source": "filesystem"},
+        {"name": "very-large", "path": "app/maps/very-large.txt", "source": "filesystem"},
+        {"name": "very-small", "path": "app/maps/very-small.txt", "source": "filesystem"}
+    ]
+
 app.include_router(pathfinder.router, prefix="", tags=["pathfinding"])
+app.include_router(maps.router, tags=["maps"])
 
 
 @app.get("/")

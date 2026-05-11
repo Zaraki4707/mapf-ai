@@ -5,7 +5,7 @@ import GridVisualization from './components/GridVisualization';
 import InputForm from './components/InputForm';
 import BenchmarkPage from './components/BenchmarkPage';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_URL = 'https://backend-taupe-gamma-78.vercel.app';
 
 function App() {
   const [activePage, setActivePage] = useState('solver');
@@ -135,6 +135,7 @@ function App() {
                     paths={result.paths}
                     gridHeight={result.grid_height}
                     gridWidth={result.grid_width}
+                    obstacles={result.obstacles}
                   />
 
                   <div className="path-details">
@@ -163,7 +164,6 @@ function App() {
       </main>
 
       <footer className="App-footer">
-        <p>Powered by Conflict-Based Search (CBS) and classical search benchmarks</p>
       </footer>
     </div>
   );

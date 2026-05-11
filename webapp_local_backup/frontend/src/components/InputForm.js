@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './InputForm.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_URL = 'https://backend-taupe-gamma-78.vercel.app';
 
 const EXAMPLE_DATA = {
   grid_height: 6,
@@ -27,7 +27,7 @@ function InputForm({ onSubmit, onSimpleSubmit, loading }) {
   const [availableMaps, setAvailableMaps] = useState([]);
   const [selectedMap, setSelectedMap] = useState('custom');
   const [numAgents, setNumAgents] = useState(10);
-  const [autoGenerate, setAutoGenerate] = useState(false);
+  const [autoGenerate] = useState(false);
 
   useEffect(() => {
     const fetchMaps = async () => {

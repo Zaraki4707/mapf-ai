@@ -27,6 +27,7 @@ class PathfinderResponse(BaseModel):
     num_agents: Optional[int] = None
     total_cost: Optional[int] = None
     paths: Optional[List[List[List[int]]]] = None
+    obstacles: Optional[List[List[int]]] = None
     message: Optional[str] = None
 
 
