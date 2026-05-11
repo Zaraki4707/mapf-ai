@@ -1,0 +1,337 @@
+:root {
+  --bg-primary: #1A1C1E;
+  --bg-secondary: #202326;
+  --grid-line: #2D3135;
+  --border-structural: #3D4248;
+  --text-primary: #FFFFFF;
+  --text-muted: #A0A0A0;
+  
+  --agent-1: #F1C40F; /* Safety Yellow */
+  --agent-2: #3498DB; /* Cyan */
+  --agent-3: #C0392B; /* Crimson */
+  --pickup: #E67E22;  /* Safety Orange */
+  --dropoff: #1E8449; /* Forest Green */
+  
+  --font-main: 'Inter', 'IBM Plex Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+}
+
+body {
+  background-color: var(--bg-primary);
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-main);
+}
+
+.grid-visualization {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--border-structural);
+  margin: 1rem;
+}
+
+.visualization-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--border-structural);
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+}
+
+.visualization-header h3 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  background: var(--bg-secondary);
+  padding: 8px 16px;
+  border: 1px solid var(--border-structural);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.visualizer-main {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+}
+
+.grid-wrapper {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-structural);
+  padding: 16px;
+  position: relative;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.grid-container {
+  display: inline-grid;
+  background-color: var(--grid-line);
+  gap: 1px;
+  border: 1px solid var(--grid-line);
+}
+
+.grid-cell {
+  width: 36px;
+  height: 36px;
+  background-color: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: none;
+}
+
+.grid-cell.obstacle {
+  background-color: #2D3135 !important;
+}
+
+/* Obstacles - High Visibility Debugging */
+.grid-cell.obstacle-cell {
+  background-color: #ff00ff !important; /* MAGENTA for extreme visibility during debug */
+  border: 2px solid white !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 5;
+}
+
+.obstacle-box {
+  width: 20px; /* Larger box */
+  height: 20px;
+  background-color: #ff0000 !important; /* Pure Red */
+  border: 1px solid black;
+  z-index: 10 !important;
+  pointer-events: none;
+}
+
+/* Agent Nodes - Sharp Square */
+.agent-node {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: bold;
+  font-size: 12px;
+  color: #000;
+  z-index: 10;
+  border: 1px solid rgba(0,0,0,0.3);
+}
+
+/* Breadcrumb Trails */
+.breadcrumb {
+  width: 6px;
+  height: 6px;
+  opacity: 0.4;
+  position: absolute;
+  z-index: 2;
+}
+
+/* Future Path Markers */
+.future-marker {
+  width: 32px;
+  height: 32px;
+  border: 1px dashed currentColor;
+  opacity: 0.3;
+  position: absolute;
+}
+
+/* Telemetry Panel */
+.telemetry-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.telemetry-readout {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-structural);
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.telemetry-header {
+  border-bottom: 1px solid var(--border-structural);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-weight: bold;
+}
+
+.telemetry-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.telemetry-row:last-child { margin-bottom: 0; }
+
+.agent-stats {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 4px;
+  background: rgba(255,255,255,0.03);
+}
+
+.agent-label {
+    font-weight: bold;
+    font-family: var(--font-mono);
+}
+
+/* Hardware-style Controls */
+.controls-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-structural);
+  padding: 16px;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hw-button {
+  background: #2D3135;
+  border: 1px solid var(--border-structural);
+  color: var(--text-primary);
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 100ms linear;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hw-button:hover:not(:disabled) {
+  background: #3D4248;
+}
+
+.hw-button:active:not(:disabled) {
+  background: #1A1C1E;
+  border-color: #000;
+}
+
+.hw-button.primary {
+  border-left: 4px solid var(--agent-2);
+}
+
+.hw-button:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+
+.options-panel {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-structural);
+}
+
+.hw-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.hw-checkbox input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--border-structural);
+  background: var(--bg-primary);
+  cursor: pointer;
+  position: relative;
+}
+
+.hw-checkbox input:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  background: var(--agent-1);
+}
+
+/* Crosshair Destination */
+.crosshair {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #FFF;
+  border-radius: 0;
+  z-index: 5;
+}
+.crosshair::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: -4px; width: 32px; height: 1px;
+  background: rgba(255,255,255,0.7);
+}
+.crosshair::after {
+  content: '';
+  position: absolute;
+  left: 50%; top: -4px; width: 1px; height: 32px;
+  background: rgba(255,255,255,0.7);
+}
+
+/* Waypoints */
+.pickup-point {
+    width: 16px;
+    height: 16px;
+    background: var(--pickup);
+    z-index: 5;
+}
+
+.dropoff-point {
+    width: 16px;
+    height: 16px;
+    background: var(--dropoff);
+    transform: rotate(45deg);
+    z-index: 5;
+}
+
+@media (max-width: 1024px) {
+  .visualizer-main {
+    grid-template-columns: 1fr;
+  }
+}

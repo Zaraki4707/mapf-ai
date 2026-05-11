@@ -1,0 +1,131 @@
+.grid-config-page {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.config-header {
+    width: 100%;
+    max-width: 1200px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-structural);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.config-header h2 {
+    margin-top: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.2rem;
+    color: var(--acc-yellow);
+    margin-bottom: 15px;
+}
+
+.config-controls {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.mode-selector {
+    display: flex;
+    gap: 5px;
+}
+
+.agent-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-primary);
+    padding: 5px 10px;
+    border: 1px solid var(--border-structural);
+}
+
+.agent-input {
+    width: 60px;
+    background: transparent;
+    border: none;
+    color: var(--acc-blue);
+    font-weight: bold;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+}
+
+.algorithm-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-primary);
+    padding: 5px 10px;
+    border: 1px solid var(--border-structural);
+}
+
+.algo-select {
+    background: transparent;
+    border: none;
+    color: var(--acc-yellow);
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+    cursor: pointer;
+}
+
+.algo-select option {
+    background: var(--bg-secondary);
+    color: white;
+}
+
+.find-path-btn {
+    background: var(--acc-blue) !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+.grid-visualizer-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-structural);
+    padding: 20px;
+    overflow: auto;
+    max-width: 100%;
+}
+
+.grid-container {
+    display: grid;
+    gap: 1px;
+    background: var(--border-structural);
+    border: 1px solid var(--border-structural);
+}
+
+.grid-cell {
+    width: 30px;
+    height: 30px;
+    background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s;
+}
+
+.grid-cell:hover {
+    background: #2c3035;
+}
+
+.grid-cell.obstacle {
+    background: #000;
+}
+
+.grid-cell.start { background: #27ae60; }
+.grid-cell.pick { background: #f39c12; }
+.grid-cell.drop { background: #2980b9; }
+.grid-cell.end { background: #c0392b; }
+
+.cell-label {
+    font-size: 10px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+    font-family: 'JetBrains Mono', monospace;
+}
