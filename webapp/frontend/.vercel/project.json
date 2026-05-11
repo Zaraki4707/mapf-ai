@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_fn4f4Dpbdgkpf5n0CBS7cxvEDj0d",
+  "orgId": "team_reAYLyzO2WACSxCH1Hc1pCi4",
+  "projectName": "frontend",
+  "settings": {
+    "createdAt": 1778357225049,
+    "framework": "create-react-app",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}
