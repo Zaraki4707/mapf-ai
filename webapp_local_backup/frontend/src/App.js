@@ -66,7 +66,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>🤖 Multi-Agent Path Finding</h1>
+        <h1> Multi-Agent Path Finding</h1>
         <p>Find paths with CBS and benchmark classical AI search algorithms</p>
         <div className="app-nav">
           <button

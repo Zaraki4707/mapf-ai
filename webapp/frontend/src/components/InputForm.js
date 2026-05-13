@@ -5,25 +5,25 @@ import './InputForm.css';
 const API_URL = 'https://backend-taupe-gamma-78.vercel.app';
 
 const EXAMPLE_DATA = {
-  grid_height: 6,
-  grid_width: 17,
-  obstacles: [[0, 13], [2, 1], [2, 15], [4, 10], [5, 3]],
-  start: [[0, 0], [5, 9], [1, 7]],
-  pick: [[5, 0], [4, 6], [1, 12]],
-  drop: [[0, 8], [5, 5], [3, 15]],
-  destination: [[3, 12], [0, 10], [0, 5]]
+  grid_height: 8,
+  grid_width: 8,
+  obstacles: [[0, 3], [1, 3], [2, 3], [4, 4], [5, 4], [6, 4]],
+  start: [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2], [3, 0]],
+  pick: [[7, 0], [7, 1], [7, 2], [6, 0], [6, 1], [6, 2], [5, 0], [5, 1], [5, 2], [4, 0]],
+  drop: [[0, 7], [1, 7], [2, 7], [0, 6], [1, 6], [2, 6], [0, 5], [1, 5], [2, 5], [0, 4]],
+  destination: [[7, 7], [7, 6], [7, 5], [6, 7], [6, 6], [6, 5], [5, 7], [5, 6], [5, 5], [4, 7]]
 };
 
 function InputForm({ onSubmit, onSimpleSubmit, loading }) {
   const [mode, setMode] = useState('full');
   const [algorithm, setAlgorithm] = useState('independent_astar');
-  const [gridHeight, setGridHeight] = useState(6);
-  const [gridWidth, setGridWidth] = useState(17);
-  const [obstacles, setObstacles] = useState('0,13; 2,1; 2,15; 4,10; 5,3');
-  const [start, setStart] = useState('0,0; 5,9; 1,7');
-  const [pick, setPick] = useState('5,0; 4,6; 1,12');
-  const [drop, setDrop] = useState('0,8; 5,5; 3,15');
-  const [destination, setDestination] = useState('3,12; 0,10; 0,5');
+  const [gridHeight, setGridHeight] = useState(EXAMPLE_DATA.grid_height);
+  const [gridWidth, setGridWidth] = useState(EXAMPLE_DATA.grid_width);
+  const [obstacles, setObstacles] = useState(EXAMPLE_DATA.obstacles.map(o => o.join(',')).join('; '));
+  const [start, setStart] = useState(EXAMPLE_DATA.start.map(s => s.join(',')).join('; '));
+  const [pick, setPick] = useState(EXAMPLE_DATA.pick.map(p => p.join(',')).join('; '));
+  const [drop, setDrop] = useState(EXAMPLE_DATA.drop.map(d => d.join(',')).join('; '));
+  const [destination, setDestination] = useState(EXAMPLE_DATA.destination.map(d => d.join(',')).join('; '));
   const [availableMaps, setAvailableMaps] = useState([]);
   const [selectedMap, setSelectedMap] = useState('custom');
   const [numAgents, setNumAgents] = useState(10);
@@ -137,7 +137,7 @@ function InputForm({ onSubmit, onSimpleSubmit, loading }) {
           </select>
         </div>
         <p className="help-text" style={{fontSize: '0.85em', color: '#666'}}>
-          Note: Only Independent A* is fully implemented.
+          Note: Hill Climbing is recommended for multiple agents.
         </p>
       </div>
 

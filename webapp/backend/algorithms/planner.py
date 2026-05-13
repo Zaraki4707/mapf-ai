@@ -5,6 +5,7 @@ from .robot import Robot
 from .independent_astar import IndependentAStarPlanner
 from .prioritized_astar import PrioritizedPlanner
 from .conflict_detector import ConflictDetector
+from .hill_climbing import HillClimbingSolver
 
 
 class PathPlanner:
@@ -14,6 +15,7 @@ class PathPlanner:
         self.grid = grid
         self.planner = IndependentAStarPlanner(grid)
         self.prioritized_planner = PrioritizedPlanner(grid)
+        self.hc_solver = HillClimbingSolver(grid)
         self.detector = ConflictDetector()
 
     def plan_simple(self, starts: List[Tuple[int, int]], destinations: List[Tuple[int, int]], algorithm: str = 'independent_astar') -> Dict:
@@ -22,6 +24,9 @@ class PathPlanner:
         """
         if algorithm == 'cooperative_astar':
             return self.plan_prioritized_simple(starts, destinations)
+        
+        if algorithm == 'hill_climbing':
+            return self.plan_hc_simple(starts, destinations)
 
         if len(starts) != len(destinations):
             return {
@@ -62,6 +67,9 @@ class PathPlanner:
         """
         if algorithm == 'cooperative_astar':
             return self.plan_prioritized_full(starts, picks, drops, destinations)
+            
+        if algorithm == 'hill_climbing':
+            return self.plan_hc_full(starts, picks, drops, destinations)
 
         if not (len(starts) == len(picks) == len(drops) == len(destinations)):
             return {
@@ -169,3 +177,59 @@ class PathPlanner:
             full_path.extend(segment[1:])
 
         return full_path
+
+    def plan_hc_simple(self, starts: List[Tuple[int, int]], destinations: List[Tuple[int, int]]) -> Dict:
+        """Helper for Hill Climbing simple mode."""
+        robots = []
+        for i, (start, dest) in enumerate(zip(starts, destinations)):
+            robots.append(Robot(i, self.grid, start, dest))
+            
+        paths_dict = self.hc_solver.solve(robots)
+        paths_list = [paths_dict[i] for i in range(len(starts))]
+        
+        total_cost = sum(len(p) - 1 for p in paths_list if p)
+        return {
+            'success': True,
+            'grid_height': self.grid.height,
+            'grid_width': self.grid.width,
+            'num_agents': len(starts),
+            'total_cost': total_cost,
+            'paths': paths_list
+        }
+
+    def plan_hc_full(self, starts: List[Tuple[int, int]], picks: List[Tuple[int, int]],
+                     drops: List[Tuple[int, int]], destinations: List[Tuple[int, int]]) -> Dict:
+        """Helper for Hill Climbing full mode."""
+        # For simplicity in HC which is centralized, we solve the whole sequence as one robot if possible,
+        # but the current HC implementation handles single segments. 
+        # To adapt to WebApp's Start -> Pick -> Drop -> Dest:
+        all_final_paths = []
+        
+        # Segment 1: Start -> Pick
+        robots1 = [Robot(i, self.grid, starts[i], picks[i]) for i in range(len(starts))]
+        paths1 = self.hc_solver.solve(robots1)
+        
+        # Segment 2: Pick -> Drop
+        # We need to consider time offsets for true consistency, but for this implementation
+        # we'll solve segments sequentially or as an integrated task.
+        # Given the hc_solver structure, we'll follow simple sequence:
+        robots2 = [Robot(i, self.grid, picks[i], drops[i]) for i in range(len(starts))]
+        paths2 = self.hc_solver.solve(robots2)
+        
+        # Segment 3: Drop -> Dest
+        robots3 = [Robot(i, self.grid, drops[i], destinations[i]) for i in range(len(starts))]
+        paths3 = self.hc_solver.solve(robots3)
+        
+        for i in range(len(starts)):
+            full_path = self._concatenate_segments([paths1[i], paths2[i], paths3[i]])
+            all_final_paths.append(full_path)
+            
+        total_cost = sum(len(p) - 1 for p in all_final_paths)
+        return {
+            'success': True,
+            'grid_height': self.grid.height,
+            'grid_width': self.grid.width,
+            'num_agents': len(starts),
+            'total_cost': total_cost,
+            'paths': all_final_paths
+        }
