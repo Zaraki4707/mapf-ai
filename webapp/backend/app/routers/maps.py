@@ -21,7 +21,7 @@ class MapInfo(BaseModel):
     source: str
 
 
-@router.get("/maps", response_model=List[MapInfo])
+@router.get("/maps", response_model=List[dict])
 async def get_maps():
     """Get list of available maps"""
     # Hardcoded list of maps that we KNOW exist in the project
@@ -35,6 +35,7 @@ async def get_maps():
     # Try multiple filesystem locations
     search_paths = [
         Path(__file__).parent.parent / "maps",
+        Path("webapp/backend/app/maps"),
         Path("app/maps"),
         Path("maps"),
     ]
@@ -45,11 +46,13 @@ async def get_maps():
             if directory.exists():
                 for f in directory.iterdir():
                     if f.suffix == ".txt" and f.name not in seen_files:
-                        maps.append(MapInfo(
-                            name=f.stem, 
-                            path=str(f.absolute()), 
-                            source="filesystem"
-                        ))
+                        maps.append({
+                            "id": str(f.absolute()), 
+                            "name": f.stem, 
+                            "path": str(f.absolute()), 
+                            "source": "filesystem",
+                            "category": "Standard Maps"
+                        })
                         seen_files.add(f.name)
         except:
             pass
@@ -57,23 +60,62 @@ async def get_maps():
     # Always include the hardcoded ones if they weren't found via filesystem
     for m in hardcoded_map_names:
         if m not in seen_files:
-            # We use a path that we know was bundled
-            maps.append(MapInfo(
-                name=m,
-                path=f"app/maps/{m}.txt",
-                source="hardcoded"
-            ))
+            maps.append({
+                "id": m,
+                "name": m,
+                "path": f"app/maps/{m}.txt",
+                "source": "hardcoded",
+                "category": "Standard Maps"
+            })
 
     return maps
 
 
-@router.get("/maps/{map_path:path}")
+@router.get("/get_map_details/{map_path:path}")
 async def load_map(map_path: str):
     """Load a specific map and return grid info"""
-    full_path = Path(map_path)
+    print(f"DEBUG: Loading map details for: {map_path}")
+    # Fix for path resolution in different environments
+    current_dir = Path(__file__).parent.parent.resolve() # webapp/backend/app
+    
+    # Try different possible paths for the map
+    # We want to check:
+    # 1. Absolute path (if map_path is absolute)
+    # 2. Inside the current app directory / maps/
+    # 3. Inside the local webapp directory
+    # 4. Just the filename inside the maps folder
+    
+    clean_path = map_path.replace("\\", "/") # normalize
+    filename = Path(clean_path).name
+    if not filename.endswith('.txt'):
+        filename += '.txt'
 
-    if not full_path.exists():
-        return {"error": "Map not found"}
+    possible_paths = [
+        Path(clean_path),
+        current_dir / "maps" / filename,
+        Path("webapp/backend/app/maps") / filename,
+        Path("app/maps") / filename,
+        BASE_DIR / "maps" / filename
+    ]
+
+    full_path = None
+    for p in possible_paths:
+        try:
+            print(f"DEBUG: Checking path: {p}")
+            if p.exists() and p.is_file():
+                full_path = p
+                print(f"DEBUG: Found map at: {p}")
+                break
+        except Exception as e:
+            print(f"DEBUG: Error checking {p}: {e}")
+            continue
+
+    if not full_path:
+        return {
+            "error": f"Map not found: {map_path}",
+            "tried_paths": [str(p) for p in possible_paths],
+            "current_working_dir": os.getcwd()
+        }
 
     grid = []
     obstacles = []
@@ -94,12 +136,10 @@ async def load_map(map_path: str):
     height = len(grid)
 
     return {
+        "id": map_path,
         "name": full_path.stem,
         "path": str(full_path),
         "height": height,
         "width": width,
-        "obstacles": obstacles,
-        "total_cells": height * width,
-        "obstacle_count": len(obstacles),
-        "walkable_count": (height * width) - len(obstacles)
+        "obstacles": obstacles
     }

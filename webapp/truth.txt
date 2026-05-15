@@ -1,0 +1,358 @@
+Abstract:
+This project focuses on the design and development of an Automated Warehouse Robot Controller using Multi-Agent Pathfinding (MAPF) techniques. The system simulates a group of autonomous warehouse robots moving within a grid-based environment to transport shelves or items to specific destinations while avoiding collisions and deadlocks.
+Several search and optimization algorithms are implemented and compared, including Independent A*, Cooperative A*, and Hill Climbing. Conflict-Based Search (CBS) is included as a bonus and extra extension to further enhance coordination performance.
+The goal of the system is to generate safe and efficient paths for multiple robots while reducing overall completion time, robot waiting time, and traffic congestion inside the warehouse.
+To evaluate the performance of the system, experiments were conducted using a grid inspired by the layout of the BMS warehouse. The simulation also includes visualizations of robot movements and congestion heatmaps, helping to better understand traffic flow and system behavior in crowded environments.
+Overall, this project demonstrates how artificial intelligence techniques can improve automation, coordination, and operational efficiency in modern warehouse management systems.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Introduction :
+Modern warehouses are becoming increasingly complex due to the rapid growth of e-commerce and logistics services. These environments require fast, accurate, and efficient handling of large volumes of goods, which has made traditional manual coordination methods insufficient. As a result, warehouse automation and the use of autonomous robots have become essential solutions for improving operational efficiency.
+A major challenge in automated warehouses is the coordination of multiple robots operating simultaneously in a shared space. Unlike single-robot navigation, multi-robot systems must handle additional difficulties such as path conflicts, congestion, and potential deadlocks, especially in narrow and structured grid-like environments. As the number of robots increases, ensuring safe and efficient movement becomes even more challenging, requiring intelligent and scalable planning strategies.
+This project focuses on the Multi-Agent Path Finding (MAPF) problem in a grid-based warehouse environment. The goal is to generate collision-free paths for multiple robots while optimizing performance metrics such as makespan and flowtime. To address this, several approaches are implemented and compared, including Independent A*, Cooperative A*, Hill Climbing, and an optional Conflict-Based Search (CBS) method.
+The importance of this problem lies in its direct real-world applications, where even small improvements in coordination can significantly increase warehouse throughput, reduce delays, and lower operational costs. Efficient multi-robot planning is therefore a key factor in modern intelligent logistics systems.
+To evaluate the proposed methods, simulations are conducted on a grid-based warehouse inspired by a real-world layout (BMS warehouse). Different scenarios are tested with varying numbers of robots to study scalability and performance under congestion. Visualization tools such as path animations are also used to better analyze system behavior.
+Overall, this work demonstrates how artificial intelligence techniques can be applied to solve complex multi-robot coordination problems, highlighting the trade-offs between efficiency, optimality, and scalability in automated warehouse systems.
+
+
+
+
+
+
+ State of the Art
+Multi-Agent Pathfinding (MAPF) has become a major research topic in robotics and autonomous logistics, especially with the rise of automated warehouses operated by companies such as Amazon Robotics and Ocado.
+ In recent years, researchers have explored different approaches to coordinate large numbers of robots while avoiding collisions and minimizing travel time. In this report, we introduce 3 main approaches.
+3.1 Centralized Search-Based Approaches (CBS and Variants)
+Centralized search-based algorithms, especially Conflict-Based Search (CBS), remain among the most widely used methods for optimal MAPF. CBS works using a hierarchical strategy: a high-level search detects conflicts between robots, while a low-level planner computes individual paths under specific constraints.
+One major advantage of CBS is that it guarantees mathematically conflict-free paths and often produces optimal solutions with respect to metrics such as travel cost, Makespan, or Flowtime. Because of these guarantees, centralized approaches are considered highly reliable in controlled warehouse environments.
+However, these methods suffer from scalability limitations. As the number of robots increases, the number of possible conflicts grows exponentially, which causes the search tree to become extremely large. In dense warehouse systems containing hundreds of robots, computation time can increase significantly and may fail to satisfy real-time requirements.
+3.2 Decentralized Learning-Based Approaches (MARL)
+To overcome scalability problems, recent research has increasingly focused on Multi-Agent Reinforcement Learning (MARL). In decentralized systems, each robot independently learns navigation and collision-avoidance behaviors through repeated interaction with the environment.
+These approaches are highly adaptive and flexible. They are also more resilient to communication delays or partial system failures, which makes them attractive for large-scale warehouse automation.
+Nevertheless, learning-based approaches still present important limitations. Since decisions are mainly local, robots may enter deadlock or livelock situations, especially inside narrow warehouse corridors where global coordination is necessary. In addition, most MARL systems do not provide formal guarantees of safety or optimality, which is a major issue in industrial environments where collisions can interrupt operations and damage equipment.
+3.3 Modern Approaches: Space-Time and Kinodynamic Planning
+More recently, the R&D community has explored advanced MAPF models that integrate space-time reservation systems and realistic robot motion constraints. Traditional MAPF assumes that robots can stop, rotate, or accelerate instantaneously, which does not reflect the behavior of physical robots.
+Modern approaches therefore introduce time as an explicit planning dimension, where each robot state is represented using coordinates such as (x, y, t). This allows planners to prevent both vertex conflicts and edge conflicts, including situations where two robots attempt to swap positions simultaneously.
+Another important research direction concerns deadlock resolution in confined spaces such as single-cell warehouse aisles. Researchers now combine cooperative pathfinding with optimization and scheduling techniques in order to improve throughput and reduce congestion in high-density robotic systems.
+3.4 Concerning Our Project
+Our solution introduces a novel controller that combines the efficiency of Cooperative A* with the optimization capabilities of Hill Climbing.
+The first innovation of our approach is the integration of a space-time planning model, where time is treated as a discrete coordinate. This enables the system to prevent both vertex and edge conflicts while ensuring collision-free robot trajectories.
+The second innovation is a dynamic re-optimization phase based on Hill Climbing. Traditional Cooperative A* often suffers from greedy priority bias, where robots planned earlier receive better paths while later robots experience delays. Our optimization layer continuously improves movement ordering and scheduling, which reduces overall Makespan and Flowtime while preserving collision-free guarantees.
+As a result, the proposed architecture offers a balanced compromise between reliability, computational efficiency, and scalability, making it particularly suitable for high-density automated warehouse environments.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3. Data Set Building
+3.1 Source and Acquisition
+The dataset is derived from the architectural floor plans of BMS, a prominent Algerian manufacturing company. By focusing on the first and second floors, technical drawings were converted into a machine-readable 180 * 72 grid. This serves as the primary warehouse environment for testing the multi-agent control system, providing a high-fidelity real-world layout with actual storage sections (A, B, C, D, E), charging stations (Montre de Charge), and elevators (Assenseur).
+3.2 Objective of Data Collection and Analysis
+The data was collected and digitized to serve as a high-fidelity environment for a fleet of automated warehouse robots. The primary objectives include:
+MAPF Coordination: Providing a graph-based structure for algorithms (like Cooperative A* or CBS) to plan conflict-free paths in the time-space dimension.
+Collision and Deadlock Prevention: Identifying narrow corridors and intersections where "Edge Conflicts" or deadlocks are mathematically likely.
+Task List Generation: Establishing a "Pick List" based on the facility’s physical layout, where storage zones are ranked by frequency of access to simulate realistic "Lifelong MAPF" scenarios.
+3.3 Data Representation and Resolution
+The warehouse is encoded as a discrete 2D occupancy matrix G(x, y) in {., T}:
+. (Walkable): Open space where the robot fleet can navigate and transport shelves.
+T (Obstacle): Fixed storage racks (Sections A–E), structural pillars, and elevators.
+Scaling Factor and Precision:
+A 1:4 scaling ratio is applied, mapping every physical 1m^2 to a 2 * 2 grid block. This results in a 0.5m-per-cell resolution, which is critical for:
+Safety Buffers: Maintaining a safety distance between robots.
+Granular Movement: Enabling robots to perform "wait" actions or slight adjustments in tight clearances (e.g., near the Monte de charge) without occupying a full square meter of operational space.
+Problem Solving techniques:
+Problem Formulation:
+The warehouse environment was modeled as a two-dimensional grid where multiple robots navigate from start positions to goal positions while avoiding obstacles, collisions, and deadlocks. The problem was formulated as a Multi-Agent Path Finding (MAPF) problem since robots move simultaneously in a shared environment and must coordinate their actions.
+A global state representation was used to describe the warehouse configuration at any moment. Each state contains:
+Robot information (ID, start position, goal position, goal status, and visualization color)
+Current robot positions
+Collision count
+Deadlock status
+A reference to the warehouse grid environment
+This representation was chosen because it allows the system to evaluate both path quality and coordination quality between robots.
+The goal test requires:
+All robots reach their goal positions
+No collisions occur
+No deadlocks are detected
+Two optimization objectives were also considered:
+Minimizing the makespan (total completion time)
+Minimizing the flowtime (sum of robot travel costs)
+At each time step, robots can:
+Move up
+Move down
+Move left
+Move right
+Wait
+The wait action was important because robots may need to pause temporarily to avoid conflicts or unblock other robots.
+The transition model updates robot positions, paths, collisions, and deadlock conditions after every action. The path cost function was defined uniformly, where each movement or wait action costs one time unit.
+The initial state was designed so that all robots start at distinct valid positions with no initial conflicts or planned paths.
+CSP Formulation:
+In addition to the search problem formulation, the project also uses a Constraint Satisfaction Problem (CSP) formulation, especially for Conflict-Based Search (CBS), since CBS can be viewed as a CSP-based approach.
+In the CSP formulation:
+Variables represent the paths of the robots
+Domains represent all possible paths from the start position to the goal position for each robot
+Constraints ensure:
+No vertex collisions (two robots occupying the same cell at the same time)
+No edge collisions (two robots swapping positions simultaneously)
+This formulation allows CBS to systematically resolve conflicts by adding constraints whenever collisions are detected.
+Implemented Techniques
+Independent A*
+Independent A* was implemented as a baseline solution. Each robot computes its path independently using the A* algorithm with the Manhattan distance heuristic. Although it generates optimal shortest paths for individual robots, it does not consider interactions between robots, which may lead to collisions and deadlocks.
+Cooperative A*
+Cooperative A* improves coordination by planning robots sequentially while using a reservation table to avoid occupied cells and time steps. This significantly reduces conflicts and makes use of wait actions to coordinate robot movement safely.
+Hill Climbing
+Hill Climbing was tested as a local search optimization technique. Since A* naturally generates optimal paths, Hill Climbing was evaluated on smaller grids with intentionally non-optimal paths. The evaluation function favored shorter distances to goals while penalizing collisions and deadlocks. Although fast, Hill Climbing may become trapped in local optima and does not guarantee optimal solutions.
+Conflict-Based Search (CBS)
+Conflict-Based Search (CBS) was implemented as an advanced MAPF technique. It separates the problem into:
+A low-level planner using A*
+A high-level conflict resolution process
+When conflicts are detected, constraints are added and only the affected robots are replanned. CBS was selected because it systematically resolves conflicts while preserving path optimality and improving scalability in complex warehouse environments.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Application Design
+The MAPF system is implemented as a full-stack web application with a Python backend and React frontend.
+
+System Architecture:
+The backend handles all pathfinding computations using FastAPI, while the frontend provides interactive visualization and user interface. The system follows a client-server architecture where users can upload custom grid maps, configure robot start/goal positions, and select from different planning algorithms.
+
+Backend Components:
+- algorithms/independent_astar.py: Implements baseline A* for single-robot pathfinding
+- algorithms/prioritized_astar.py: Implements Cooperative A* with prioritized planning and reservation tables
+- algorithms/hill_climbing.py: Implements local search optimization for path improvement
+- algorithms/cbs.py: Implements Conflict-Based Search with hierarchical conflict resolution
+- algorithms/hill_climbing_optimizer.py: Post-processing optimizer that refines paths using local search
+- algorithms/conflict_detector.py: Detects vertex and edge conflicts between robot paths
+
+Frontend Components:
+- GridVisualization.js: Renders the warehouse grid with robot positions and paths
+- InputForm.js: Allows users to configure robots, goals, and algorithm selection
+- GridMapPage.js: Displays the grid environment with interactive controls
+
+The application supports two operation modes:
+1. Simple Mode: Direct start-to-destination pathfinding
+2. Full Mode: Multi-step paths with pick and drop locations (Start → Pick → Drop → Destination)
+
+API Endpoints:
+- POST /api/pathfinder/simple: Compute paths for simple mode
+- POST /api/pathfinder/full: Compute paths for full mode with pick/drop sequences
+- GET /api/maps: List available warehouse maps
+- POST /api/maps/upload: Upload custom grid maps
+
+Technology Stack:
+- Backend: Python, FastAPI, A* search algorithms
+- Frontend: React, JavaScript, Canvas API for visualization
+- Data Format: ASCII grid files with '.' (walkable) and 'T' (obstacle)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Discussion
+1. Interpreting the Results:
+In this section, we analyze the behavior of robots in the grid environment and explain the performance differences observed across algorithms.
+
+Independent A* Behavior:
+When using Independent A*, robots compute optimal paths without considering other robots. This often leads to path intersections where multiple robots attempt to occupy the same cell simultaneously. The robots may collide in the simulation because there is no coordination mechanism. This approach is useful as a baseline but not suitable for collision-free multi-robot navigation in practice.
+
+Cooperative A* Behavior:
+Cooperative A* significantly reduces conflicts by using a reservation table that tracks occupied cells and time steps. Robots planned earlier receive priority and better paths, while later robots must wait or take alternative routes. This sequential planning introduces a bias where early robots get optimal paths and later robots experience delays. The reservation mechanism successfully prevents both vertex and edge conflicts, making it reliable for warehouse environments.
+
+Hill Climbing Behavior:
+Hill Climbing provides fast local optimization but tends to get trapped in local optima. It works best when starting from non-optimal initial paths. The evaluation function penalizes collisions and deadlocks while rewarding shorter paths. In dense warehouse scenarios, Hill Climbing may not find the globally optimal solution but provides acceptable results quickly.
+
+CBS Behavior:
+Conflict-Based Search systematically resolves conflicts by adding constraints and replanning affected robots. CBS guarantees optimal solutions with respect to makespan and flowtime, but computation time increases significantly with more robots. In high-density scenarios, CBS may timeout but produces the best quality paths when it completes.
+
+2. Algorithm Comparison:
+The trade-offs observed are:
+- Independent A*: Fast but not collision-free
+- Cooperative A*: Balanced speed and reliability
+- Hill Climbing: Fast optimization but may miss optimal solutions
+- CBS: Highest path quality but computationally expensive
+
+3. Scalability Analysis:
+As the number of robots increases, Cooperative A* remains computationally feasible while CBS struggles with the exponential growth in conflicts. The reservation table in Cooperative A* enables efficient collision avoidance even with many robots, though overall completion time (makespan) increases due to waiting.
+
+4. Practical Implications:
+The web application demonstrates that MAPF algorithms can be effectively deployed in real warehouse scenarios. The visualization tools help operators understand robot traffic flow and identify congestion points. The combination of Cooperative A* with Hill Climbing optimization provides a practical balance between solution quality and computational efficiency.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Conclusion
+This project presents a Multi-Agent Pathfinding (MAPF) controller for automated warehouse systems that combines Cooperative A* and Hill Climbing optimization to coordinate multiple robots efficiently in dense environments. The proposed system aims to generate collision-free paths while reducing congestion, deadlocks, Makespan, and overall Flowtime under realistic warehouse constraints.
+Key Findings
+– Space-time path planning effectively prevents both vertex and edge conflicts between robots.
+ – Cooperative A* provides reliable and computationally efficient collision-free navigation for multi-robot systems.
+ – Hill Climbing optimization improves robot scheduling and reduces delays caused by greedy priority ordering.
+ – Combining search-based planning with dynamic optimization offers better scalability in high-density warehouse environments.
+Contributions
+– A hybrid MAPF controller integrating Cooperative A* with Hill Climbing optimization.
+ – A space-time reservation model where robot states are represented as (x, y, t).
+ – An optimization layer capable of dynamically refining robot movement ordering and scheduling.
+Implications
+– Improves coordination and throughput in automated warehouse systems.
+ – Reduces deadlock situations and robot congestion in narrow warehouse corridors.
+ – Bridges the gap between classical MAPF algorithms and scalable real-world industrial applications.
+ – Provides a foundation for future work integrating kinodynamic constraints, real-time replanning, and machine learning techniques.
+
+

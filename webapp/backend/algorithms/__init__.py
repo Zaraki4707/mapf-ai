@@ -5,6 +5,8 @@ from .independent_astar import IndependentAStarPlanner
 from .conflict_detector import ConflictDetector
 from .hill_climbing import HillClimbingSolver
 from .planner import PathPlanner
+from .cbs import ConflictBasedSearch
+from .hill_climbing_optimizer import HillClimbingOptimizer
 
 __all__ = [
     'Node',
@@ -13,5 +15,7 @@ __all__ = [
     'IndependentAStarPlanner',
     'ConflictDetector',
     'HillClimbingSolver',
-    'PathPlanner'
+    'PathPlanner',
+    'ConflictBasedSearch',
+    'HillClimbingOptimizer'
 ]

@@ -19,7 +19,7 @@ const INDUSTRIAL_COLORS = [
   '#FF6B6B', // Agent 15: Pastel Red
 ];
 
-function GridVisualization({ paths, gridHeight = 6, gridWidth = 17, obstacles = [] }) {
+function GridVisualization({ paths, gridHeight = 6, gridWidth = 17, obstacles = [], smallCells = false }) {
   const [timeStep, setTimeStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showTrails, setShowTrails] = useState(true);
@@ -152,8 +152,8 @@ function GridVisualization({ paths, gridHeight = 6, gridWidth = 17, obstacles = 
       <div className="visualizer-main">
         <div className="grid-wrapper">
           <div 
-            className="grid-container" 
-            style={{ gridTemplateColumns: `repeat(${gridWidth}, 36px)` }}
+            className={`grid-container ${smallCells ? 'grid-small' : ''}`} 
+            style={{ gridTemplateColumns: `repeat(${gridWidth}, ${smallCells ? '8px' : '36px'})` }}
           >
             {renderGrid()}
           </div>

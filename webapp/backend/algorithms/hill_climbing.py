@@ -6,6 +6,7 @@ from copy import deepcopy
 from .grid import GridEnvironment
 from .robot import Robot
 from .conflict_detector import ConflictDetector
+from .independent_astar import IndependentAStarPlanner
 
 class HillClimbingSolver:
     """
@@ -14,7 +15,7 @@ class HillClimbingSolver:
     Phase 2: Constrained Hill Climbing to optimize path lengths while preserving validity.
     """
 
-    def __init__(self, grid: GridEnvironment, max_iterations: int = 2000, 
+    def __init__(self, grid: GridEnvironment, max_iterations: int = 2000,
                  max_neighbors_per_iteration: int = 10, seed: int = None):
         self.grid = grid
         self.max_iterations = max_iterations
@@ -22,9 +23,14 @@ class HillClimbingSolver:
         self.conflict_detector = ConflictDetector()
         self.best_paths = {}
         self.best_conflict_count = float('inf')
-        
+        self.astar_planner = IndependentAStarPlanner(grid)
+
         if seed is not None:
             random.seed(seed)
+
+    def initialize_paths(self, robots: List[Robot]) -> Dict[int, List[Tuple[int, int]]]:
+        """Initialize paths using Independent A*."""
+        return self.astar_planner.plan_all_robots(robots)
 
     def solve(self, robots: List[Robot]) -> Dict[int, List[Tuple[int, int]]]:
         """Entry point for the solver."""

@@ -1,0 +1,66 @@
+/* GridMapPage — extends GridConfigPage styles */
+
+/* Small 8px cells for the large 183-col map */
+.grid-map-page .grid-cell,
+.gmp-small-cell {
+    width: 8px !important;
+    height: 8px !important;
+    cursor: pointer;
+}
+
+/* Hide labels by default; show only on hover for readability */
+.gmp-tiny-label {
+    font-size: 6px !important;
+    display: none;
+}
+.gmp-small-cell:hover .gmp-tiny-label {
+    display: block;
+}
+
+/* Agent summary bar */
+.gmp-agent-summary {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-structural);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.gmp-agent-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-primary);
+    padding: 4px 10px;
+    border: 1px solid var(--border-structural);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+}
+
+.gmp-agent-id {
+    color: var(--acc-yellow);
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+.gmp-tag {
+    padding: 1px 5px;
+    border-radius: 0;
+    font-size: 0.65rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.gmp-s       { background: #27ae60; color: #fff; }
+.gmp-p       { background: #f39c12; color: #000; }
+.gmp-d       { background: #2980b9; color: #fff; }
+.gmp-e       { background: #c0392b; color: #fff; }
+.gmp-missing { background: #2D3135; color: #5a6370; border: 1px dashed #3D4248; }
+
+/* Override obstacle appearance for GridMapPage (use actual container class `grid-config-page`) */
+.grid-config-page .grid-cell.obstacle,
+.grid-config-page .gmp-small-cell.obstacle,
+.grid-config-page .obstacle-swatch,
+.gmp-small-cell.obstacle {
+    background-color: #ff0000 !important;
+}

@@ -6,6 +6,8 @@ from .independent_astar import IndependentAStarPlanner
 from .prioritized_astar import PrioritizedPlanner
 from .conflict_detector import ConflictDetector
 from .hill_climbing import HillClimbingSolver
+from .cbs import ConflictBasedSearch
+from .hill_climbing_optimizer import HillClimbingOptimizer
 
 
 class PathPlanner:
@@ -17,6 +19,7 @@ class PathPlanner:
         self.prioritized_planner = PrioritizedPlanner(grid)
         self.hc_solver = HillClimbingSolver(grid)
         self.detector = ConflictDetector()
+        self.hc_optimizer = HillClimbingOptimizer(conflict_detector=self.detector)
 
     def plan_simple(self, starts: List[Tuple[int, int]], destinations: List[Tuple[int, int]], algorithm: str = 'independent_astar') -> Dict:
         """
@@ -27,6 +30,12 @@ class PathPlanner:
         
         if algorithm == 'hill_climbing':
             return self.plan_hc_simple(starts, destinations)
+
+        if algorithm == 'cbs':
+            return self.plan_cbs_simple(starts, destinations)
+
+        if algorithm == 'optimized_hc':
+            return self.plan_optimized_hc_simple(starts, destinations)
 
         if len(starts) != len(destinations):
             return {
@@ -70,6 +79,12 @@ class PathPlanner:
             
         if algorithm == 'hill_climbing':
             return self.plan_hc_full(starts, picks, drops, destinations)
+
+        if algorithm == 'cbs':
+            return self.plan_cbs_full(starts, picks, drops, destinations)
+
+        if algorithm == 'optimized_hc':
+            return self.plan_optimized_hc_full(starts, picks, drops, destinations)
 
         if not (len(starts) == len(picks) == len(drops) == len(destinations)):
             return {
@@ -224,6 +239,133 @@ class PathPlanner:
             full_path = self._concatenate_segments([paths1[i], paths2[i], paths3[i]])
             all_final_paths.append(full_path)
             
+        total_cost = sum(len(p) - 1 for p in all_final_paths)
+        return {
+            'success': True,
+            'grid_height': self.grid.height,
+            'grid_width': self.grid.width,
+            'num_agents': len(starts),
+            'total_cost': total_cost,
+            'paths': all_final_paths
+        }
+
+    def plan_cbs_simple(self, starts: List[Tuple[int, int]], destinations: List[Tuple[int, int]]) -> Dict:
+        """Helper for CBS simple mode."""
+        robots = []
+        for i, (start, dest) in enumerate(zip(starts, destinations)):
+            robots.append(Robot(i, self.grid, start, dest))
+
+        cbs = ConflictBasedSearch(self.grid, robots, conflict_detector=self.detector, objective="makespan")
+        result = cbs.solve(time_limit=120)
+
+        if result.get('success'):
+            paths_list = [result['paths'][i] for i in range(len(starts))]
+            total_cost = sum(len(p) - 1 for p in paths_list if p)
+            return {
+                'success': True,
+                'grid_height': self.grid.height,
+                'grid_width': self.grid.width,
+                'num_agents': len(starts),
+                'total_cost': total_cost,
+                'paths': paths_list
+            }
+        else:
+            return self.plan_prioritized_simple(starts, destinations)
+
+    def plan_cbs_full(self, starts: List[Tuple[int, int]], picks: List[Tuple[int, int]],
+                      drops: List[Tuple[int, int]], destinations: List[Tuple[int, int]]) -> Dict:
+        """Helper for CBS full mode (Start -> Pick -> Drop -> Dest)."""
+        all_final_paths = []
+
+        robots1 = [Robot(i, self.grid, starts[i], picks[i]) for i in range(len(starts))]
+        cbs1 = ConflictBasedSearch(self.grid, robots1, conflict_detector=self.detector)
+        result1 = cbs1.solve(time_limit=120)
+        if not result1.get('success'):
+            return self.plan_prioritized_full(starts, picks, drops, destinations)
+        paths1 = [result1['paths'][i] for i in range(len(starts))]
+
+        robots2 = [Robot(i, self.grid, picks[i], drops[i]) for i in range(len(starts))]
+        cbs2 = ConflictBasedSearch(self.grid, robots2, conflict_detector=self.detector)
+        result2 = cbs2.solve(time_limit=120)
+        if not result2.get('success'):
+            return self.plan_prioritized_full(starts, picks, drops, destinations)
+        paths2 = [result2['paths'][i] for i in range(len(starts))]
+
+        robots3 = [Robot(i, self.grid, drops[i], destinations[i]) for i in range(len(starts))]
+        cbs3 = ConflictBasedSearch(self.grid, robots3, conflict_detector=self.detector)
+        result3 = cbs3.solve(time_limit=120)
+        if not result3.get('success'):
+            return self.plan_prioritized_full(starts, picks, drops, destinations)
+        paths3 = [result3['paths'][i] for i in range(len(starts))]
+
+        for i in range(len(starts)):
+            full_path = self._concatenate_segments([paths1[i], paths2[i], paths3[i]])
+            all_final_paths.append(full_path)
+
+        total_cost = sum(len(p) - 1 for p in all_final_paths)
+        return {
+            'success': True,
+            'grid_height': self.grid.height,
+            'grid_width': self.grid.width,
+            'num_agents': len(starts),
+            'total_cost': total_cost,
+            'paths': all_final_paths
+        }
+
+    def plan_optimized_hc_simple(self, starts: List[Tuple[int, int]], destinations: List[Tuple[int, int]]) -> Dict:
+        """Helper for optimized Hill Climbing (Main.ipynb version) simple mode."""
+        robots = []
+        for i, (start, dest) in enumerate(zip(starts, destinations)):
+            robots.append(Robot(i, self.grid, start, dest))
+
+        paths_dict = self.planner.plan_all_robots(robots)
+
+        paths_for_opt = {i: paths_dict[i] for i in range(len(starts)) if paths_dict.get(i) is not None}
+        optimized_paths = self.hc_optimizer.optimize(paths_for_opt, self.grid, max_iterations=1000, timeout=30)
+
+        conflicts = self.detector.detect_conflicts(optimized_paths)
+        if conflicts:
+            return self.plan_prioritized_simple(starts, destinations)
+
+        paths_list = [optimized_paths.get(i, paths_dict.get(i)) for i in range(len(starts))]
+
+        total_cost = sum(len(p) - 1 for p in paths_list if p)
+        return {
+            'success': True,
+            'grid_height': self.grid.height,
+            'grid_width': self.grid.width,
+            'num_agents': len(starts),
+            'total_cost': total_cost,
+            'paths': paths_list
+        }
+
+    def plan_optimized_hc_full(self, starts: List[Tuple[int, int]], picks: List[Tuple[int, int]],
+                               drops: List[Tuple[int, int]], destinations: List[Tuple[int, int]]) -> Dict:
+        """Helper for optimized Hill Climbing (Main.ipynb version) full mode."""
+        all_final_paths = []
+
+        robots1 = [Robot(i, self.grid, starts[i], picks[i]) for i in range(len(starts))]
+        paths1_dict = self.planner.plan_all_robots(robots1)
+        paths1_for_opt = {i: paths1_dict.get(i) for i in range(len(starts)) if paths1_dict.get(i) is not None}
+        opt1 = self.hc_optimizer.optimize(paths1_for_opt, self.grid, max_iterations=500, timeout=15)
+        paths1 = [opt1.get(i, paths1_dict.get(i)) for i in range(len(starts))]
+
+        robots2 = [Robot(i, self.grid, picks[i], drops[i]) for i in range(len(starts))]
+        paths2_dict = self.planner.plan_all_robots(robots2)
+        paths2_for_opt = {i: paths2_dict.get(i) for i in range(len(starts)) if paths2_dict.get(i) is not None}
+        opt2 = self.hc_optimizer.optimize(paths2_for_opt, self.grid, max_iterations=500, timeout=15)
+        paths2 = [opt2.get(i, paths2_dict.get(i)) for i in range(len(starts))]
+
+        robots3 = [Robot(i, self.grid, drops[i], destinations[i]) for i in range(len(starts))]
+        paths3_dict = self.planner.plan_all_robots(robots3)
+        paths3_for_opt = {i: paths3_dict.get(i) for i in range(len(starts)) if paths3_dict.get(i) is not None}
+        opt3 = self.hc_optimizer.optimize(paths3_for_opt, self.grid, max_iterations=500, timeout=15)
+        paths3 = [opt3.get(i, paths3_dict.get(i)) for i in range(len(starts))]
+
+        for i in range(len(starts)):
+            full_path = self._concatenate_segments([paths1[i], paths2[i], paths3[i]])
+            all_final_paths.append(full_path)
+
         total_cost = sum(len(p) - 1 for p in all_final_paths)
         return {
             'success': True,

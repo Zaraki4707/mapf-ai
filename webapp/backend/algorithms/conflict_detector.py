@@ -13,7 +13,10 @@ class ConflictDetector:
     def detect_vertex_conflicts(self, paths: Dict) -> List[Dict]:
         conflicts = []
         robot_ids = list(paths.keys())
-        max_time = max(len(path) for path in paths.values())
+        valid_paths = {k: v for k, v in paths.items() if v is not None and len(v) > 0}
+        if not valid_paths:
+            return conflicts
+        max_time = max(len(path) for path in valid_paths.values())
 
         for t in range(max_time):
             positions_at_t = {}
@@ -40,7 +43,10 @@ class ConflictDetector:
     def detect_edge_conflicts(self, paths: Dict) -> List[Dict]:
         conflicts = []
         robot_ids = list(paths.keys())
-        max_time = max(len(path) for path in paths.values()) - 1
+        valid_paths = {k: v for k, v in paths.items() if v is not None and len(v) > 0}
+        if not valid_paths:
+            return conflicts
+        max_time = max(len(path) for path in valid_paths.values()) - 1
 
         for t in range(max_time):
             edges_at_t = {}
@@ -96,7 +102,10 @@ class ConflictDetector:
     def detect_edge_swap_conflicts(self, paths: Dict) -> List[Dict]:
         conflicts = []
         robot_ids = list(paths.keys())
-        max_time = max(len(path) for path in paths.values()) - 1
+        valid_paths = {k: v for k, v in paths.items() if v is not None and len(v) > 0}
+        if not valid_paths:
+            return conflicts
+        max_time = max(len(path) for path in valid_paths.values()) - 1
 
         for t in range(max_time):
             for i, robot1_id in enumerate(robot_ids):
@@ -122,7 +131,10 @@ class ConflictDetector:
     def detect_following_conflicts(self, paths: Dict) -> List[Dict]:
         conflicts = []
         robot_ids = list(paths.keys())
-        max_time = max(len(path) for path in paths.values()) - 1
+        valid_paths = {k: v for k, v in paths.items() if v is not None and len(v) > 0}
+        if not valid_paths:
+            return conflicts
+        max_time = max(len(path) for path in valid_paths.values()) - 1
 
         for t in range(max_time):
             for i, robot1_id in enumerate(robot_ids):
@@ -165,3 +177,29 @@ class ConflictDetector:
                 padded_path = path + [goal_pos] * (max_time - len(path))
                 padded_paths[robot_id] = padded_path
         return padded_paths
+
+    def detect_conflicts(self, paths: Dict) -> List[Dict]:
+        """Detect conflicts in the format expected by CBS (Main.ipynb)."""
+        conflicts = []
+        padded = self.pad_paths(paths)
+        if not padded:
+            return []
+
+        robot_ids = list(padded.keys())
+        horizon = len(next(iter(padded.values())))
+
+        for t in range(horizon):
+            pos_map = defaultdict(list)
+            for rid in robot_ids:
+                pos = padded[rid][t]
+                pos_map[pos].append(rid)
+            for pos, robots in pos_map.items():
+                if len(robots) > 1:
+                    conflicts.append({'type': 'vertex', 'time': t, 'pos': pos, 'robots': robots})
+
+            if t < horizon - 1:
+                for i, r1 in enumerate(robot_ids):
+                    for r2 in robot_ids[i+1:]:
+                        if padded[r1][t] == padded[r2][t+1] and padded[r1][t+1] == padded[r2][t] and padded[r1][t] != padded[r1][t+1]:
+                            conflicts.append({'type': 'swap', 'time': t, 'robots': [r1, r2], 'pos': (padded[r1][t], padded[r1][t+1])})
+        return conflicts

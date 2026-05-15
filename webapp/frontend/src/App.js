@@ -5,28 +5,33 @@ import GridVisualization from './components/GridVisualization';
 import InputForm from './components/InputForm';
 import BenchmarkPage from './components/BenchmarkPage';
 import GridConfigPage from './components/GridConfigPage';
+import GridMapPage from './components/GridMapPage';
 
-const API_URL = 'https://backend-taupe-gamma-78.vercel.app';
+const API_URL = process.env.NODE_ENV === 'development' 
+  ? 'http://localhost:8000' 
+  : (process.env.REACT_APP_API_URL || 'https://backend-taupe-gamma-78.vercel.app');
 
 function App() {
   const [activePage, setActivePage] = useState('solver');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [useSmallCells, setUseSmallCells] = useState(false);
 
   const handleSubmit = async (formData) => {
-    console.log('Sending request to:', `${API_URL}/find-path`);
+    console.log('Sending request to:', `${API_URL}/api/find-path`);
     console.log('Payload:', formData);
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await axios.post(`${API_URL}/find-path`, formData);
+      const response = await axios.post(`${API_URL}/api/find-path`, formData);
       console.log('Response:', response.data);
 
       if (response.data.success) {
         setResult(response.data);
+        setUseSmallCells(!!formData.predefined_map);
       } else {
         setError(response.data.message || 'Failed to find paths');
       }
@@ -40,18 +45,19 @@ function App() {
   };
 
   const handleSimpleSubmit = async (formData) => {
-    console.log('Sending request to:', `${API_URL}/find-simple-path`);
+    console.log('Sending request to:', `${API_URL}/api/find-simple-path`);
     console.log('Payload:', formData);
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await axios.post(`${API_URL}/find-simple-path`, formData);
+      const response = await axios.post(`${API_URL}/api/find-simple-path`, formData);
       console.log('Response:', response.data);
 
       if (response.data.success) {
         setResult(response.data);
+        setUseSmallCells(!!formData.predefined_map);
       } else {
         setError(response.data.message || 'Failed to find paths');
       }
@@ -87,6 +93,12 @@ function App() {
             onClick={() => setActivePage('grid-config')}
           >
             MANUAL GRID CONFIG
+          </button>
+          <button
+            className={activePage === 'grid-map' ? 'nav-btn nav-btn-active' : 'nav-btn'}
+            onClick={() => setActivePage('grid-map')}
+          >
+            GRID MAP
           </button>
         </div>
       </header>
@@ -143,6 +155,7 @@ function App() {
                     gridHeight={result.grid_height}
                     gridWidth={result.grid_width}
                     obstacles={result.obstacles}
+                    smallCells={useSmallCells}
                   />
 
                   <div className="path-details">
@@ -169,6 +182,12 @@ function App() {
           {activePage === 'benchmark' && <BenchmarkPage />}
           {activePage === 'grid-config' && (
             <GridConfigPage onRunSolver={(formData) => {
+              setActivePage('solver');
+              handleSubmit(formData);
+            }} />
+          )}
+          {activePage === 'grid-map' && (
+            <GridMapPage onRunSolver={(formData) => {
               setActivePage('solver');
               handleSubmit(formData);
             }} />

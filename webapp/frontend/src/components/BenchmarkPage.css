@@ -138,4 +138,199 @@
 .algo-bar-fill {
   height: 100%;
   background: linear-gradient(90deg, #3498db, #f1c40f);
+}.benchmark-page {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-structural);
+  padding: 16px;
 }
+
+.benchmark-head h2 {
+  margin: 0;
+  color: var(--acc-blue);
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+}
+
+.benchmark-head p {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+}
+
+.benchmark-controls {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.benchmark-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.benchmark-controls input {
+  height: 36px;
+  border: 1px solid var(--border-structural);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 0 10px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.run-btn {
+  height: 36px;
+  border: 1px solid var(--acc-yellow);
+  background: var(--acc-yellow);
+  color: #111;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+.run-btn:hover {
+  filter: brightness(1.04);
+}
+
+.benchmark-error {
+  margin-top: 12px;
+  border: 1px solid #a01b1b;
+  background: #361717;
+  color: #ffd8d8;
+  padding: 10px;
+}
+
+.benchmark-meta {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.benchmark-table-wrap {
+  margin-top: 14px;
+  overflow-x: auto;
+}
+
+.benchmark-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.benchmark-table th,
+.benchmark-table td {
+  border: 1px solid var(--border-structural);
+  padding: 8px 10px;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+}
+
+.benchmark-table th {
+  background: #2a3036;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.best-row {
+  background: rgba(241, 196, 15, 0.12);
+}
+
+.bars-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.algo-bar-card {
+  border: 1px solid var(--border-structural);
+  background: var(--bg-primary);
+  padding: 10px;
+}
+
+.algo-bar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+}
+
+.algo-bar-track {
+  height: 10px;
+  background: #111417;
+  border: 1px solid #30363c;
+}
+
+.algo-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #f1c40f);
+}
+
+/* Conflicts chart fallback styles */
+.conflicts-chart-wrap {
+  margin-top: 16px;
+  border: 1px solid var(--border-structural);
+  padding: 12px;
+  background: var(--bg-primary);
+}
+
+.conflicts-chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.conflicts-chart-head h3 {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.benchmark-preview-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.benchmark-empty-state {
+  margin-top: 14px;
+  border: 1px dashed var(--border-structural);
+  padding: 12px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+}
+
+.conflicts-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fallback-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fallback-label { width: 160px; font-family: 'JetBrains Mono', monospace; }
+.fallback-track { flex: 1; height: 14px; background: #111417; border: 1px solid #30363c; }
+.fallback-fill { height: 100%; background: linear-gradient(90deg,#f1c40f,#e67e22); }
+.fallback-value { width: 48px; text-align: right; font-family: 'JetBrains Mono', monospace; }

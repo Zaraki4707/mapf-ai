@@ -103,9 +103,10 @@ function GridConfigPage({ onRunSolver }) {
                             className="algo-select"
                         >
                             <option value="independent_astar">Independent A*</option>
-                            <option value="prioritized_astar">Prioritized A*</option>
                             <option value="cooperative_astar">Cooperative A*</option>
-                            <option value="cbs">Conflict-Based Search (CBS)</option>
+                            <option value="hill_climbing">Hill Climbing</option>
+                            <option value="cbs">CBS (Conflict-Based Search)</option>
+                            <option value="optimized_hc">Optimized Hill Climbing</option>
                         </select>
                     </div>
 

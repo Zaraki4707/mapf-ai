@@ -109,6 +109,54 @@ body {
   transition: none;
 }
 
+/* Small grid variant used when displaying predefined maps */
+.grid-container.grid-small .grid-cell {
+  width: 8px;
+  height: 8px;
+}
+
+.grid-container.grid-small .agent-node {
+  width: 6px;
+  height: 6px;
+  font-size: 4px;
+  line-height: 1;
+}
+
+.grid-container.grid-small .breadcrumb {
+  width: 3px;
+  height: 3px;
+}
+
+.grid-container.grid-small .future-marker {
+  width: 8px;
+  height: 8px;
+}
+
+.grid-container.grid-small .obstacle-box {
+  width: 6px;
+  height: 6px;
+}
+
+.grid-container.grid-small .pickup-point {
+  width: 5px;
+  height: 5px;
+}
+
+.grid-container.grid-small .crosshair {
+  width: 6px;
+  height: 6px;
+}
+
+.grid-container.grid-small .crosshair::before {
+  width: 10px;
+  left: -2px;
+}
+
+.grid-container.grid-small .crosshair::after {
+  height: 10px;
+  top: -2px;
+}
+
 .grid-cell.obstacle {
   background-color: #2D3135 !important;
 }

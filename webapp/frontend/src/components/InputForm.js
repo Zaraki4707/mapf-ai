@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './InputForm.css';
 
-const API_URL = 'https://backend-taupe-gamma-78.vercel.app';
+const API_URL = process.env.NODE_ENV === 'development' 
+  ? 'http://localhost:8000' 
+  : 'https://backend-taupe-gamma-78.vercel.app';
 
 const EXAMPLE_DATA = {
   grid_height: 8,
@@ -32,7 +34,7 @@ function InputForm({ onSubmit, onSimpleSubmit, loading }) {
   useEffect(() => {
     const fetchMaps = async () => {
       try {
-        const response = await axios.get(`${API_URL}/maps`);
+        const response = await axios.get(`${API_URL}/api/maps`);
         setAvailableMaps(response.data);
       } catch (err) {
         console.error('Failed to fetch maps:', err);
@@ -43,16 +45,28 @@ function InputForm({ onSubmit, onSimpleSubmit, loading }) {
 
   const handleMapChange = async (e) => {
     const mapId = e.target.value;
+    console.log('Selected Map ID:', mapId);
     setSelectedMap(mapId);
     
     if (mapId === 'custom') return;
 
     try {
-      const response = await axios.get(`${API_URL}/maps/${mapId}`);
-      const { grid_height, grid_width, obstacles } = response.data;
-      setGridHeight(grid_height);
-      setGridWidth(grid_width);
-      setObstacles(obstacles.map(o => o.join(',')).join('; '));
+      const response = await axios.get(`${API_URL}/api/get_map_details/${encodeURIComponent(mapId)}`);
+      console.log('Full API Response:', response.data);
+      
+      const { height, width, obstacles: mapObstacles } = response.data;
+      
+      if (height) setGridHeight(Number(height));
+      if (width) setGridWidth(Number(width));
+      
+      if (mapObstacles) {
+        const obsString = mapObstacles.map(o => `${o[0]},${o[1]}`).join('; ');
+        setObstacles(obsString);
+        setStart('');
+        setPick('');
+        setDrop('');
+        setDestination('');
+      }
     } catch (err) {
       console.error('Failed to load map data:', err);
     }
@@ -134,6 +148,8 @@ function InputForm({ onSubmit, onSimpleSubmit, loading }) {
             <option value="independent_astar">Independent A*</option>
             <option value="cooperative_astar">Cooperative A*</option>
             <option value="hill_climbing">Hill Climbing</option>
+            <option value="cbs">CBS (Conflict-Based Search)</option>
+            <option value="optimized_hc">Optimized Hill Climbing</option>
           </select>
         </div>
         <p className="help-text" style={{fontSize: '0.85em', color: '#666'}}>
@@ -192,7 +208,7 @@ function InputForm({ onSubmit, onSimpleSubmit, loading }) {
               <input
                 type="number"
                 value={gridHeight}
-                onChange={(e) => setGridHeight(e.target.value)}
+                onChange={(e) => setGridHeight(parseInt(e.target.value) || '')}
                 min="1"
                 required
               />
@@ -202,7 +218,7 @@ function InputForm({ onSubmit, onSimpleSubmit, loading }) {
               <input
                 type="number"
                 value={gridWidth}
-                onChange={(e) => setGridWidth(e.target.value)}
+                onChange={(e) => setGridWidth(parseInt(e.target.value) || '')}
                 min="1"
                 required
               />
