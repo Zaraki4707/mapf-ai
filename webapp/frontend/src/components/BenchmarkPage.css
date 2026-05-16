@@ -288,6 +288,16 @@
   background: var(--bg-primary);
 }
 
+/* Ensure chart axes and tick labels are white for readability on dark background */
+.conflicts-chart-wrap svg text,
+.conflicts-chart-wrap svg tspan {
+  fill: #ffffff !important;
+}
+.conflicts-chart-wrap svg line,
+.conflicts-chart-wrap svg path {
+  stroke: #ffffff !important;
+}
+
 .conflicts-chart-head {
   display: flex;
   align-items: center;
