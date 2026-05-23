@@ -218,3 +218,48 @@ button {
   box-shadow: none;
   font-family: 'JetBrains Mono', monospace;
 }
+
+/* Modal / Lock UI */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-structural);
+  padding: 18px;
+  width: 360px;
+  max-width: 92%;
+}
+
+.password-input {
+  width: 100%;
+  padding: 8px 10px;
+  margin-top: 8px;
+  border: 1px solid var(--border-structural);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.locked-page {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-structural);
+  padding: 20px;
+  text-align: center;
+}

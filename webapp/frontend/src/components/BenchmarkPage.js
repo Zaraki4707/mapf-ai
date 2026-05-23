@@ -46,6 +46,12 @@ const MAKESPAN_DATA = [
   { agents: 25, makespan: 186 },
 ];
 
+const SUCCESS_RATE_DATA = [
+  { agents: 5, independentAStar: 0.5, cooperativeAStar: 1.0 },
+  { agents: 10, independentAStar: 0.4, cooperativeAStar: 1.0 },
+  { agents: 20, independentAStar: 0.0, cooperativeAStar: 1.0 },
+];
+
 export default function BenchmarkPage() {
   const [lineChartFailed, setLineChartFailed] = useState(false);
 
@@ -59,6 +65,10 @@ export default function BenchmarkPage() {
   const makespanAgents = MAKESPAN_DATA.map(d => d.agents);
   const makespanValues = MAKESPAN_DATA.map(d => d.makespan);
   const [makespanFailed, setMakespanFailed] = useState(false);
+  const successAgents = SUCCESS_RATE_DATA.map(d => d.agents);
+  const successIndependent = SUCCESS_RATE_DATA.map(d => d.independentAStar);
+  const successCooperative = SUCCESS_RATE_DATA.map(d => d.cooperativeAStar);
+  const [successFailed, setSuccessFailed] = useState(false);
 
   const fallbackConflictsChart = (
     <div className="bars-grid">
@@ -131,6 +141,39 @@ export default function BenchmarkPage() {
     </div>
   );
 
+  const fallbackSuccessChart = (
+    <div className="bars-grid">
+      {SUCCESS_RATE_DATA.map(({ agents, independentAStar, cooperativeAStar }) => (
+        <div key={agents} className="algo-bar-card">
+          <div className="algo-bar-head">
+            <span>{agents} agents</span>
+            <strong>{Math.round(cooperativeAStar * 100)}% coop · {Math.round(independentAStar * 100)}% ind</strong>
+          </div>
+          <div style={{display: 'flex', gap: 8, marginTop: 8}}>
+            <div style={{flex: 1}}>
+              <div className="algo-bar-track">
+                <div
+                  className="algo-bar-fill"
+                  style={{ background: 'linear-gradient(90deg,#9b59b6,#8e44ad)', width: `${Math.max(5, (cooperativeAStar * 100) / Math.max(...[100], 1))}%` }}
+                />
+              </div>
+              <div style={{fontSize: 12, marginTop: 6}}>Cooperative: {Math.round(cooperativeAStar * 100)}%</div>
+            </div>
+            <div style={{flex: 1}}>
+              <div className="algo-bar-track">
+                <div
+                  className="algo-bar-fill"
+                  style={{ background: 'linear-gradient(90deg,#f39c12,#e67e22)', width: `${Math.max(5, (independentAStar * 100) / Math.max(...[100], 1))}%` }}
+                />
+              </div>
+              <div style={{fontSize: 12, marginTop: 6}}>Independent: {Math.round(independentAStar * 100)}%</div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <section className="benchmark-page">
       <div className="conflicts-chart-wrap">
@@ -183,6 +226,25 @@ export default function BenchmarkPage() {
             <LineChart
               xAxis={[{ data: makespanAgents }]}
               series={[{ data: makespanValues, label: 'Makespan' }]}
+              height={300}
+              width={700}
+            />
+          </ChartErrorBoundary>
+        )}
+      </div>
+
+      <div className="conflicts-chart-wrap">
+        <div className="conflicts-chart-head">
+          <h3>Success Rate vs Agents</h3>
+        </div>
+
+        {successFailed ? (
+          fallbackSuccessChart
+        ) : (
+          <ChartErrorBoundary fallback={fallbackSuccessChart} onError={() => setSuccessFailed(true)}>
+            <LineChart
+              xAxis={[{ data: successAgents }]}
+              series={[{ data: successIndependent, label: 'Independent A*' }, { data: successCooperative, label: 'Cooperative A*' }]}
               height={300}
               width={700}
             />

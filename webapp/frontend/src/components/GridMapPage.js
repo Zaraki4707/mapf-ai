@@ -131,6 +131,21 @@ function GridMapPage({ onRunSolver }) {
     });
   };
 
+  const handleLoadDefault = () => {
+    setAgents([
+      { id: 0, start: [1, 5], pick: [64, 2], drop: [68, 170], destination: [69, 5] },
+      { id: 1, start: [1, 15], pick: [64, 14], drop: [68, 165], destination: [69, 10] },
+      { id: 2, start: [1, 25], pick: [64, 28], drop: [68, 160], destination: [69, 15] },
+      { id: 3, start: [1, 35], pick: [64, 42], drop: [68, 155], destination: [69, 20] },
+      { id: 4, start: [1, 45], pick: [64, 56], drop: [68, 150], destination: [69, 25] },
+      { id: 5, start: [1, 55], pick: [64, 70], drop: [68, 145], destination: [69, 30] },
+      { id: 6, start: [1, 65], pick: [64, 84], drop: [68, 140], destination: [69, 35] },
+      { id: 7, start: [1, 75], pick: [64, 98], drop: [68, 135], destination: [69, 40] },
+      { id: 8, start: [1, 85], pick: [64, 111], drop: [68, 130], destination: [69, 45] },
+      { id: 9, start: [1, 95], pick: [64, 124], drop: [68, 125], destination: [69, 50] }
+    ]);
+  };
+
   const handleReset = () => setAgents([]);
 
   // Build cell class names quickly
@@ -195,6 +210,7 @@ function GridMapPage({ onRunSolver }) {
           {/* Actions */}
           <div className="actions">
             <button className="nav-btn" onClick={handleReset}>Reset</button>
+            <button className="nav-btn" onClick={handleLoadDefault} style={{ marginLeft: '8px' }}>Load Default</button>
             <button
               className="nav-btn find-path-btn"
               onClick={handleRun}

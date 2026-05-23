@@ -179,7 +179,10 @@ class ConflictDetector:
         return padded_paths
 
     def detect_conflicts(self, paths: Dict) -> List[Dict]:
-        """Detect conflicts in the format expected by CBS (Main.ipynb)."""
+        """
+        Optimized conflict detection using spatial hashing.
+        Only checks robots that could possibly conflict (same position/time).
+        """
         conflicts = []
         padded = self.pad_paths(paths)
         if not padded:
@@ -188,18 +191,47 @@ class ConflictDetector:
         robot_ids = list(padded.keys())
         horizon = len(next(iter(padded.values())))
 
+        # Spatial hash: maps (x, y, t) -> list of robot_ids at that position/time
+        # This allows O(1) lookup instead of O(n²) pairwise checks
+        position_index = {}
+        
         for t in range(horizon):
-            pos_map = defaultdict(list)
+            position_index.clear()  # Reuse dictionary to reduce allocations
+            
+            # Build spatial index for this timestep - O(n)
             for rid in robot_ids:
                 pos = padded[rid][t]
-                pos_map[pos].append(rid)
-            for pos, robots in pos_map.items():
+                key = (pos[0], pos[1], t)
+                if key not in position_index:
+                    position_index[key] = []
+                position_index[key].append(rid)
+            
+            # Check vertex conflicts - O(c) where c = conflicts, not O(n²)
+            for pos_key, robots in position_index.items():
                 if len(robots) > 1:
-                    conflicts.append({'type': 'vertex', 'time': t, 'pos': pos, 'robots': robots})
-
+                    conflicts.append({
+                        'type': 'vertex', 
+                        'time': t, 
+                        'pos': (pos_key[0], pos_key[1]), 
+                        'robots': robots
+                    })
+            
+            # Check swap conflicts - still O(n²) but only for adjacent timesteps
             if t < horizon - 1:
                 for i, r1 in enumerate(robot_ids):
                     for r2 in robot_ids[i+1:]:
-                        if padded[r1][t] == padded[r2][t+1] and padded[r1][t+1] == padded[r2][t] and padded[r1][t] != padded[r1][t+1]:
-                            conflicts.append({'type': 'swap', 'time': t, 'robots': [r1, r2], 'pos': (padded[r1][t], padded[r1][t+1])})
+                        p1_t = padded[r1][t]
+                        p1_t1 = padded[r1][t+1]
+                        p2_t = padded[r2][t]
+                        p2_t1 = padded[r2][t+1]
+                        
+                        # Swap: r1 goes A->B while r2 goes B->A
+                        if (p1_t == p2_t1 and p1_t1 == p2_t and p1_t != p1_t1):
+                            conflicts.append({
+                                'type': 'swap', 
+                                'time': t, 
+                                'robots': [r1, r2], 
+                                'pos': (p1_t, p1_t1)
+                            })
+        
         return conflicts

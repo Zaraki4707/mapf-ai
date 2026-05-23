@@ -19,7 +19,7 @@ const INDUSTRIAL_COLORS = [
   '#FF6B6B', // Agent 15: Pastel Red
 ];
 
-function GridVisualization({ paths, gridHeight = 6, gridWidth = 17, obstacles = [], smallCells = false }) {
+function GridVisualization({ paths, gridHeight = 6, gridWidth = 17, obstacles = [], waypoints = [], smallCells = false }) {
   const [timeStep, setTimeStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showTrails, setShowTrails] = useState(true);
@@ -63,8 +63,39 @@ function GridVisualization({ paths, gridHeight = 6, gridWidth = 17, obstacles = 
         let agentAtPosition = null;
         let isStart = false;
         let isEnd = false;
+        let isPick = false;
+        let isDrop = false;
+        let waypointOwner = null;
+        let pickActive = false;
+        let dropActive = false;
+        let dropDone = false;
         let trailAgent = null;
         let isFuture = false;
+
+        // Determine if this cell is a start, pick, drop, or dest for *any* agent
+        waypoints.forEach((wp, idx) => {
+          if (wp.start && wp.start[0] === i && wp.start[1] === j) isStart = true;
+          if (wp.destination && wp.destination[0] === i && wp.destination[1] === j) isEnd = true;
+          
+          if (wp.pick && wp.pick[0] === i && wp.pick[1] === j) {
+            isPick = true;
+            waypointOwner = idx;
+            // Check if agent reached pick by timeStep
+            // A simple heuristic: if timeStep >= pick_step, it's picked
+            const pickStep = wp.pickStep || paths[idx]?.findIndex(p => p[0] === wp.pick[0] && p[1] === wp.pick[1]);
+            pickActive = !(pickStep !== undefined && pickStep !== -1 && timeStep >= pickStep);
+          }
+          if (wp.drop && wp.drop[0] === i && wp.drop[1] === j) {
+            isDrop = true;
+            waypointOwner = idx;
+            const dropStep = wp.dropStep || paths[idx]?.findIndex(p => p[0] === wp.drop[0] && p[1] === wp.drop[1]);
+            if (dropStep !== undefined && dropStep !== -1 && timeStep >= dropStep) {
+              dropDone = true;
+            } else {
+              dropActive = true;
+            }
+          }
+        });
 
         paths.forEach((path, idx) => {
           const pos = getAgentPosition(idx, timeStep);
@@ -113,7 +144,32 @@ function GridVisualization({ paths, gridHeight = 6, gridWidth = 17, obstacles = 
             )}
 
             {/* Waypoints */}
-            {isStart && agentAtPosition === null && <div className="pickup-point" title="START/PICKUP" />}
+            {isPick && pickActive && agentAtPosition === null && (
+              <div 
+                className="waypoint-text" 
+                style={{ color: INDUSTRIAL_COLORS[waypointOwner % INDUSTRIAL_COLORS.length] }}
+              >
+                P
+              </div>
+            )}
+            
+            {dropDone && agentAtPosition === null && isDrop && (
+              <div 
+                className="waypoint-box-done" 
+                style={{ backgroundColor: '#2ecc71' }} // Green square when dropped
+              />
+            )}
+            
+            {isDrop && dropActive && !dropDone && agentAtPosition === null && (
+              <div 
+                className="waypoint-text" 
+                style={{ color: INDUSTRIAL_COLORS[waypointOwner % INDUSTRIAL_COLORS.length] }}
+              >
+                D
+              </div>
+            )}
+
+            {isStart && agentAtPosition === null && <div className="pickup-point" title="START" />}
             {isEnd && agentAtPosition === null && <div className="crosshair" title="DESTINATION" />}
 
             {/* Agent Node */}

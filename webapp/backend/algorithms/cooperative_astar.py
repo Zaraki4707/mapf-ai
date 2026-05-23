@@ -7,6 +7,7 @@ class CooperativeAStarPlanner:
     Cooperative A* implementation based on HamamtiAsma's implementation.
     Plans robots sequentially using a reservation table to avoid vertex and edge conflicts.
     """
+    MAX_NODE_EXPANSIONS = 50000
 
     def __init__(self, grid):
         self.grid = grid
@@ -57,7 +58,9 @@ class CooperativeAStarPlanner:
         # Directions: Right, Down, Left, Up, Wait
         directions = [(0, 1), (1, 0), (0, -1), (-1, 0), (0, 0)]
 
-        while open_heap:
+        expansions = 0
+        while open_heap and expansions < self.MAX_NODE_EXPANSIONS:
+            expansions += 1
             f, g, x, y, t = heapq.heappop(open_heap)
 
             if (x, y) == goal:
@@ -101,32 +104,52 @@ class CooperativeAStarPlanner:
             current = came_from[current]
         return path[::-1]
 
+    def _add_path_to_reservation(self, reservation_table: Set[Tuple[int, int, int]], 
+                                 path: List[Tuple[int, int]], horizon: int = 5000) -> None:
+        """
+        Add a single path to existing reservation table (incremental update).
+        
+        Args:
+            reservation_table: Existing reservation set (modified in-place)
+            path: Path to add
+            horizon: Maximum time to reserve goal position
+        """
+        if not path:
+            return
+        
+        # Reserve path positions
+        for t, pos in enumerate(path):
+            reservation_table.add((pos[0], pos[1], t))
+        
+        # Reserve goal for all future time
+        goal = path[-1]
+        for t in range(len(path), horizon):
+            reservation_table.add((goal[0], goal[1], t))
+
     def plan(self, agents_tasks: List[List[Tuple[int, int]]]) -> List[List[Tuple[int, int]]]:
         """
-        Plans for multiple agents sequentially.
-        agents_tasks: List of task points for each agent. e.g. [[start1, pick1, drop1, dest1], ...]
+        Plans for multiple agents sequentially with incremental reservation.
+        
+        Args:
+            agents_tasks: List of task points for each agent
+            
+        Returns:
+            List of full paths for each agent
         """
+        # Use single reservation table updated incrementally - MODIFIED
         reservation_table = set()
         final_paths = []
-        all_planned_paths = []
-
+        
         for tasks in agents_tasks:
             agent_full_path = []
             curr_start = tasks[0]
             
             success = True
             for goal in tasks[1:]:
-                # Note: The reservation table is time-indexed. 
-                # When planning the next segment of an agent, we need to consider the time it starts.
-                # Here we adjust A* to start at the current full path length.
                 start_time = len(agent_full_path) if agent_full_path else 0
                 
-                # Update reservation table to include "stay-at-goal" positions for all PREVIOUSLY planned robots
-                # for the duration of THIS robot's segment. 
-                # We use a large enough horizon to cover the search.
-                current_reservation = self._build_reservation_table(all_planned_paths)
-
-                segment = self._astar_with_start_time(curr_start, goal, current_reservation, start_time)
+                # Use existing reservation table - MODIFIED
+                segment = self._astar_with_start_time(curr_start, goal, reservation_table, start_time)
                 
                 if segment is None:
                     success = False
@@ -141,8 +164,8 @@ class CooperativeAStarPlanner:
             
             if success:
                 final_paths.append(agent_full_path)
-                all_planned_paths.append(agent_full_path)
-                # Wait for the next agent - reservation table is built inside the loop for segments
+                # Incrementally add this agent's path to reservation - NEW
+                self._add_path_to_reservation(reservation_table, agent_full_path)
             else:
                 final_paths.append(None)
         
@@ -160,7 +183,9 @@ class CooperativeAStarPlanner:
         # Adjust max_time to be relative to start_time
         absolute_max_time = start_time + max_time
 
-        while open_heap:
+        expansions = 0
+        while open_heap and expansions < self.MAX_NODE_EXPANSIONS:
+            expansions += 1
             f, g, x, y = heapq.heappop(open_heap)
             t = g
 

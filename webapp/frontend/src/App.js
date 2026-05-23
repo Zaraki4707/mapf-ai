@@ -6,10 +6,7 @@ import InputForm from './components/InputForm';
 import BenchmarkPage from './components/BenchmarkPage';
 import GridConfigPage from './components/GridConfigPage';
 import GridMapPage from './components/GridMapPage';
-
-const API_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:8000' 
-  : (process.env.REACT_APP_API_URL || 'https://backend-taupe-gamma-78.vercel.app');
+import { getApiUrl } from './config/api';
 
 function App() {
   const [activePage, setActivePage] = useState('solver');
@@ -17,20 +14,54 @@ function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [useSmallCells, setUseSmallCells] = useState(false);
+  const [gridMapUnlocked, setGridMapUnlocked] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordAttempt, setPasswordAttempt] = useState('');
+  const [passwordError, setPasswordError] = useState(null);
+
+  const GRIDMAP_PASSWORD = (process.env.REACT_APP_GRIDMAP_PASSWORD || '').trim();
+
+  const handlePasswordSubmit = () => {
+    if (passwordAttempt.trim() === GRIDMAP_PASSWORD && GRIDMAP_PASSWORD !== '') {
+      setGridMapUnlocked(true);
+      setShowPasswordModal(false);
+      setPasswordAttempt('');
+      setPasswordError(null);
+      setActivePage('grid-map');
+    } else {
+      if (GRIDMAP_PASSWORD === '') {
+        setPasswordError('System Error: Background password not configured in environment.');
+      } else {
+        setPasswordError('Incorrect password.');
+      }
+    }
+  };
 
   const handleSubmit = async (formData) => {
-    console.log('Sending request to:', `${API_URL}/api/find-path`);
-    console.log('Payload:', formData);
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await axios.post(`${API_URL}/api/find-path`, formData);
+      const apiUrl = await getApiUrl();
+      console.log('Sending request to:', `${apiUrl}/api/find-path`);
+      console.log('Payload:', formData);
+      const response = await axios.post(`${apiUrl}/api/find-path`, formData);
       console.log('Response:', response.data);
 
       if (response.data.success) {
-        setResult(response.data);
+        // Build waypoints array mapped to agent paths
+        const numAgents = response.data.num_agents || (response.data.paths ? response.data.paths.length : 0);
+        const waypoints = [];
+        for (let i = 0; i < numAgents; i++) {
+          waypoints.push({
+            start: formData.start ? formData.start[i] : null,
+            pick: formData.pick ? formData.pick[i] : null,
+            drop: formData.drop ? formData.drop[i] : null,
+            destination: formData.destination ? formData.destination[i] : null,
+          });
+        }
+        setResult({ ...response.data, waypoints });
         setUseSmallCells(!!formData.predefined_map);
       } else {
         setError(response.data.message || 'Failed to find paths');
@@ -45,14 +76,15 @@ function App() {
   };
 
   const handleSimpleSubmit = async (formData) => {
-    console.log('Sending request to:', `${API_URL}/api/find-simple-path`);
-    console.log('Payload:', formData);
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await axios.post(`${API_URL}/api/find-simple-path`, formData);
+      const apiUrl = await getApiUrl();
+      console.log('Sending request to:', `${apiUrl}/api/find-simple-path`);
+      console.log('Payload:', formData);
+      const response = await axios.post(`${apiUrl}/api/find-simple-path`, formData);
       console.log('Response:', response.data);
 
       if (response.data.success) {
@@ -96,7 +128,13 @@ function App() {
           </button>
           <button
             className={activePage === 'grid-map' ? 'nav-btn nav-btn-active' : 'nav-btn'}
-            onClick={() => setActivePage('grid-map')}
+            onClick={() => {
+              if (gridMapUnlocked) {
+                setActivePage('grid-map');
+              } else {
+                setShowPasswordModal(true);
+              }
+            }}
           >
             GRID MAP
           </button>
@@ -155,6 +193,7 @@ function App() {
                     gridHeight={result.grid_height}
                     gridWidth={result.grid_width}
                     obstacles={result.obstacles}
+                    waypoints={result.waypoints || []}
                     smallCells={useSmallCells}
                   />
 
@@ -186,11 +225,50 @@ function App() {
               handleSubmit(formData);
             }} />
           )}
-          {activePage === 'grid-map' && (
+          {activePage === 'grid-map' && gridMapUnlocked && (
             <GridMapPage onRunSolver={(formData) => {
               setActivePage('solver');
               handleSubmit(formData);
             }} />
+          )}
+
+          {activePage === 'grid-map' && !gridMapUnlocked && (
+            <div className="locked-page">
+              <h3>Sensitive content — access restricted</h3>
+              <p>This section requires a password. Click below to enter the password.</p>
+              <div style={{marginTop: 12}}>
+                <button className="nav-btn" onClick={() => setShowPasswordModal(true)}>Enter Password</button>
+              </div>
+            </div>
+          )}
+
+          {showPasswordModal && (
+            <div className="modal-overlay">
+              <div className="modal">
+                <h3>Enter GRID MAP Password</h3>
+                <p style={{color: 'var(--text-muted)', marginTop: 6}}>Password is stored in environment variable.</p>
+                <input
+                  type="password"
+                  value={passwordAttempt}
+                  onChange={(e) => setPasswordAttempt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handlePasswordSubmit();
+                  }}
+                  placeholder="Password"
+                  className="password-input"
+                  autoFocus
+                />
+                {passwordError && <div className="error-details" style={{marginTop:8, color: '#ff4d4d'}}>{passwordError}</div>}
+                <div className="modal-actions">
+                  <button className="nav-btn" onClick={handlePasswordSubmit}>Submit</button>
+                  <button className="nav-btn" onClick={() => {
+                    setShowPasswordModal(false);
+                    setPasswordAttempt('');
+                    setPasswordError(null);
+                  }} style={{marginLeft: 8}}>Cancel</button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </main>

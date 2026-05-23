@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './InputForm.css';
-
-const API_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:8000' 
-  : 'https://backend-taupe-gamma-78.vercel.app';
+import { getApiUrl } from '../config/api';
 
 const EXAMPLE_DATA = {
   grid_height: 8,
@@ -34,7 +31,8 @@ function InputForm({ onSubmit, onSimpleSubmit, loading }) {
   useEffect(() => {
     const fetchMaps = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/maps`);
+        const apiUrl = await getApiUrl();
+        const response = await axios.get(`${apiUrl}/api/maps`);
         setAvailableMaps(response.data);
       } catch (err) {
         console.error('Failed to fetch maps:', err);
@@ -51,7 +49,8 @@ function InputForm({ onSubmit, onSimpleSubmit, loading }) {
     if (mapId === 'custom') return;
 
     try {
-      const response = await axios.get(`${API_URL}/api/get_map_details/${encodeURIComponent(mapId)}`);
+      const apiUrl = await getApiUrl();
+      const response = await axios.get(`${apiUrl}/api/get_map_details/${encodeURIComponent(mapId)}`);
       console.log('Full API Response:', response.data);
       
       const { height, width, obstacles: mapObstacles } = response.data;

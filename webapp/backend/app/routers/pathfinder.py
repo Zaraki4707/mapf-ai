@@ -200,12 +200,18 @@ async def find_path(request: PathfinderRequest):
         drops = _convert_coords(request.drop) if request.drop else None
         destinations = _convert_coords(request.destination)
 
+    import time
+    start_time = time.time()
+    
     planner = PathPlanner(grid)
 
     if request.pick and request.drop:
         result = planner.plan_full(starts, picks, drops, destinations, algorithm=request.algorithm)
     else:
         result = planner.plan_simple(starts, destinations, algorithm=request.algorithm)
+
+    execution_time = time.time() - start_time
+    print(f"\n[{request.algorithm}] Pathfinding Execution Time: {execution_time:.3f} seconds\n")
 
     if result.get('paths'):
         result['paths'] = [_convert_output(p) for p in result['paths']]
@@ -246,10 +252,16 @@ async def find_simple_path(request: PathfinderRequest):
         starts = _convert_coords(request.start)
         destinations = _convert_coords(request.destination)
 
+    import time
+    start_time = time.time()
+
     planner = PathPlanner(grid)
 
     result = planner.plan_simple(starts, destinations, algorithm=request.algorithm)
     
+    execution_time = time.time() - start_time
+    print(f"\n[{request.algorithm}] Simple Pathfinding Execution Time: {execution_time:.3f} seconds\n")
+
     if result.get('paths'):
         result['paths'] = [_convert_output(p) for p in result['paths']]
         # Pass obstacles back to frontend for visualization

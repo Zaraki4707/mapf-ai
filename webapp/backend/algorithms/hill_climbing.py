@@ -1,5 +1,6 @@
 import heapq
 import random
+import concurrent.futures
 from typing import List, Dict, Tuple, Optional
 from copy import deepcopy
 
@@ -7,6 +8,8 @@ from .grid import GridEnvironment
 from .robot import Robot
 from .conflict_detector import ConflictDetector
 from .independent_astar import IndependentAStarPlanner
+
+MAX_NODE_EXPANSIONS = 50000
 
 class HillClimbingSolver:
     """
@@ -32,10 +35,94 @@ class HillClimbingSolver:
         """Initialize paths using Independent A*."""
         return self.astar_planner.plan_all_robots(robots)
 
-    def solve(self, robots: List[Robot]) -> Dict[int, List[Tuple[int, int]]]:
-        """Entry point for the solver."""
-        paths, conflicts, _ = self.hill_climb(robots, verbose=False)
-        return paths
+    def solve_parallel(self, robots: List[Robot], max_workers: int = 4) -> Dict[int, List[Tuple[int, int]]]:
+        """
+        Parallel hill climbing using thread pool.
+        
+        Args:
+            robots: List of robots to plan for
+            max_workers: Number of parallel threads (default: 4)
+            
+        Returns:
+            Dictionary mapping robot_id to path
+        """
+        current_paths = self.initialize_paths(robots)
+        current_conflicts = self.conflict_detector.count_conflicts(current_paths)
+        total_len = sum(len(p) for p in current_paths.values() if p)
+        
+        no_improvement = 0
+        iteration = 0
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            while iteration < self.max_iterations and no_improvement < 200:
+                iteration += 1
+                
+                # Generate multiple candidate neighbors in parallel
+                futures = []
+                candidate_robots = []
+                
+                for _ in range(min(max_workers * 2, len(robots))):
+                    rid = random.choice([r.robot_id for r in robots])
+                    robot = next(r for r in robots if r.robot_id == rid)
+                    candidate_robots.append((rid, robot))
+                    
+                    # Submit neighbor generation task
+                    future = executor.submit(
+                        self.generate_swap_neighbor,
+                        robot,
+                        current_paths[rid],
+                        current_paths
+                    )
+                    futures.append(future)
+                
+                # Evaluate all candidates
+                improved = False
+                for (rid, robot), future in zip(candidate_robots, futures):
+                    try:
+                        new_path = future.result(timeout=2.0)
+                        
+                        if new_path and new_path != current_paths[rid]:
+                            test_paths = {**current_paths, rid: new_path}
+                            new_conflicts = self.conflict_detector.count_conflicts(test_paths)
+                            new_len = sum(len(p) for p in test_paths.values() if p)
+                            
+                            # Accept if better
+                            if new_conflicts < current_conflicts or \
+                               (new_conflicts == current_conflicts and new_len < total_len):
+                                current_paths = test_paths
+                                current_conflicts = new_conflicts
+                                total_len = new_len
+                                improved = True
+                                break
+                                
+                    except (concurrent.futures.TimeoutError, Exception):
+                        continue
+                
+                if improved:
+                    no_improvement = 0
+                else:
+                    no_improvement += 1
+        
+        self.best_paths = current_paths
+        self.best_conflict_count = current_conflicts
+        return current_paths
+
+    def solve(self, robots: List[Robot], use_parallel: bool = True) -> Dict[int, List[Tuple[int, int]]]:
+        """
+        Solve with automatic parallel/sequential selection.
+        
+        Args:
+            robots: List of robots
+            use_parallel: Use parallel version if True and >3 robots
+            
+        Returns:
+            Paths dictionary
+        """
+        if use_parallel and len(robots) > 3:
+            return self.solve_parallel(robots, max_workers=4)
+        else:
+            paths, _, _ = self.hill_climb(robots, verbose=False)
+            return paths
 
     def generate_swap_neighbor(self, robot: Robot, current_path: List[Tuple[int, int]], 
                                 other_paths: Dict[int, List[Tuple[int, int]]]) -> Optional[List[Tuple[int, int]]]:
@@ -172,7 +259,9 @@ class HillClimbingSolver:
         
         max_horizon = max(200, len(other_paths) * 20)
         
-        while open_set:
+        expansions = 0
+        while open_set and expansions < MAX_NODE_EXPANSIONS:
+            expansions += 1
             f, g, cx, cy, ct = heapq.heappop(open_set)
             
             if (cx, cy, ct) in closed_set: continue
